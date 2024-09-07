@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Service</title>
+    <style>
+        body {
+            font-family: "HSE Sans", sans-serif;
+            background: linear-gradient(135deg, #f0e5cf, rgba(201, 247, 255, 0.84));
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 50px;
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+        h2 {
+            color: #4a4a4a;
+            margin: 0 0 20px 0;
+        }
+        .actions, .form-container {
+            margin-bottom: 20px;
+        }
+        .actions button {
+            background-color: #a3c4bc;
+            color: #fff;
+            border: none;
+            padding: 18px 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px 0;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .actions button:hover {
+            background-color: rgba(142, 160, 166, 0.62);
+            transform: translateY(-2px);
+        }
+        form {
+            display: none;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+        label {
+            margin-bottom: 5px;
+            color: #666;
+            text-align: left;
+        }
+        input, textarea {
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, textarea:focus {
+            border-color: #a3c4bc;
+            outline: none;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        button.submit {
+            background-color: #d1b3c4;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button.submit:hover {
+            background-color: #c49ba2;
+            transform: translateY(-2px);
+        }
+        .back-button {
+            background-color: #f3b3b3;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .back-button:hover {
+            background-color: #e09e9e;
+            transform: translateY(-2px);
+        }
+        .result-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-top: 20px;
+        }
+        #result {
+            display: none;
+            margin-top: 1px;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            width: 100%;
+            text-align: center;
+            min-height: 1px;
+            white-space: break-spaces;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        .success {
+            color: #28a745;
+            border: 1px solid #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            background-color: #f8d7da;
+        }
+
+
+
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1e1e1e, #333);
+            color: #f0f0f0;
+        }
+        .container.dark-mode {
+            background: #2a2a2a;
+            box-shadow: 0 8px 16px rgba(255, 255, 255, 0.1);
+        }
+        h2.dark-mode {
+            color: #ffffff;
+        }
+        .actions button.dark-mode, button.submit.dark-mode, .back-button.dark-mode {
+            background-color: #4a4a4a;
+            color: #ffffff;
+        }
+        .actions button.dark-mode:hover, button.submit.dark-mode:hover, .back-button.dark-mode:hover {
+            background-color: #5e5e5e;
+        }
+        input.dark-mode, textarea.dark-mode {
+            background-color: #333;
+            border: 1px solid #555;
+            color: #ddd;
+        }
+        input.dark-mode:focus, textarea.dark-mode:focus {
+            border-color: #777;
+        }
+        .success.dark-mode {
+            color: #28a745;
+            border: 1px solid #28a745;
+            background-color: #213c30;
+        }
+        .error.dark-mode {
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            background-color: #3c2121;
+        }
+        #theme-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            border: none;
+            color: #4a4a4a;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: color 0.3s;
+        }
+        #theme-switcher:hover {
+            color: #a3c4bc;
+        }
+    </style>
+</head>
+<body>
+<button id="theme-switcher" onclick="toggleTheme()">
+    <i class="fas fa-moon"></i>
+</button>
+<div class="container">
+    <h1>Notification Management</h1>
+    <div class="actions">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+        <button onclick="showForm('create')"><i class="fas fa-plus"></i> Create New Notification</button>
+        <button onclick="showForm('edit')"><i class="fas fa-edit"></i> Edit Notification</button>
+        <button onclick="showForm('delete')"><i class="fas fa-trash"></i> Delete Notification</button>
+    </div>
+
+    <form id="createForm">
+        <h2>Create Notification</h2>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="theme">Subject:</label>
+        <input type="text" id="theme" name="theme" required>
+
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" required></textarea>
+
+        <label for="sendTime">Send Date and Time:</label>
+        <input type="datetime-local" id="sendTime" name="sendTime" required>
+
+        <button type="button" class="submit" onclick="submitForm('create')">Create</button>
+        <button type="button" class="back-button" onclick="goBack()">Back</button>
+    </form>
+
+    <form id="editForm">
+        <h2>Edit Notification</h2>
+        <label for="editId">Notification ID:</label>
+        <input type="number" id="editId" name="id" required>
+
+        <label for="editEmail">Email:</label>
+        <input type="email" id="editEmail" name="email" required>
+
+        <label for="editTheme">Subject:</label>
+        <input type="text" id="editTheme" name="theme" required>
+
+        <label for="editMessage">Message:</label>
+        <textarea id="editMessage" name="message" required></textarea>
+
+        <label for="editSendTime">Send Date and Time:</label>
+        <input type="datetime-local" id="editSendTime" name="sendTime" required>
+
+        <button type="button" class="submit" onclick="submitForm('edit')">Edit</button>
+        <button type="button" class="back-button" onclick="goBack()">Back</button>
+    </form>
+
+    <form id="deleteForm">
+        <h2>Delete Notification</h2>
+        <label for="deleteId">Notification ID:</label>
+        <input type="number" id="deleteId" name="id" required>
+
+        <button type="button" class="submit" onclick="submitForm('delete')">Delete</button>
+        <button type="button" class="back-button" onclick="goBack()">Back</button>
+    </form>
+    <div class="result-container">
+        <div id="result"></div>
+    </div>
+</div>
+
+
+<script>
+    function showForm(formType) {
+        document.querySelector('.actions').style.display = 'none';
+        document.querySelectorAll('form').forEach(form => form.style.display = 'none');
+        document.getElementById(formType + 'Form').style.display = 'flex';
+    }
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        document.querySelectorAll('.container, h2, .actions button, button.submit, .back-button, input, textarea, .success, .error').forEach(el => el.classList.toggle('dark-mode'));
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    }
+    window.onload = function() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            toggleTheme();
+        }
+    };
+    function goBack() {
+        document.querySelector('.actions').style.display = 'block';
+        document.querySelectorAll('form').forEach(form => form.style.display = 'none');
+    }
+    async function submitForm(action) {
+        let url = 'http://localhost:8080/notifications';
+        let method = 'POST';
+        let data = {};
+
+        if (action === 'create') {
+            data = {
+                type: document.getElementById('theme').value,
+                recipient: document.getElementById('email').value,
+                message: document.getElementById('message').value,
+                scheduled_time: document.getElementById('sendTime').value
+            };
+        } else if (action === 'edit') {
+            url += `/${document.getElementById('editId').value}`;
+            method = 'PUT';
+            data = {
+                type: document.getElementById('editTheme').value,
+                recipient: document.getElementById('editEmail').value,
+                message: document.getElementById('editMessage').value,
+                scheduled_time: document.getElementById('editSendTime').value
+            };
+        } else if (action === 'delete') {
+            url += `/${document.getElementById('deleteId').value}`;
+            method = 'DELETE';
+        }
+
+        console.log('Sending data:', JSON.stringify(data, null, 2));
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: method !== 'DELETE' ? JSON.stringify(data) : null,
+            });
+
+            const result = await response.json();
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            if (response.ok) {
+                resultDiv.textContent = `Success! ${result.status} ID: ${result.id}`;
+                resultDiv.className = 'success';
+            } else {
+                resultDiv.textContent = `Error: ${result.status}`;
+                resultDiv.className = 'error';
+            }
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 3000);
+        } catch (error) {
+            console.error('Error:', error);
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Error connecting to the server.';
+            resultDiv.className = 'error';
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 3000);
+        }
+    }
+</script>
+</body>
+</html>

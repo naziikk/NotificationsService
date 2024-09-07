@@ -1,0 +1,164 @@
+openapi: "3.0.2"
+info:
+  title: Notification Service API
+  version: "1.0"
+servers:
+  - url: http://localhost:8080/
+paths:
+  /notifications:
+    post:
+      description: Создает новое уведомление с заданными параметрами.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Тип уведомления.
+                recipient:
+                  type: string
+                  description: Получатель уведомления.
+                message:
+                  type: string
+                  description: Сообщение для отправки.
+                scheduled_time:
+                  type: string
+                  format: date-time
+                  description: Время, когда уведомление должно быть отправлено.
+              required:
+                - type
+                - recipient
+                - message
+                - scheduled_time
+      responses:
+        '200':
+          description: Уведомление успешно создано
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  id:
+                    type: string
+                    description: Уникальный идентификатор уведомления
+                  scheduled_time:
+                    type: string
+                    format: date-time
+                    description: Время, когда уведомление будет отправлено.
+        '400':
+          description: Неверные данные запроса
+
+  /notifications/{id}:
+    delete:
+      description: Удаляет уведомление по его уникальному идентификатору.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Уникальный идентификатор уведомления
+      responses:
+        '200':
+          description: Уведомление успешно удалено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        '404':
+          description: Уведомление не найдено
+
+    put:
+      description: Изменяет уведомление по его уникальному идентификатору.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Уникальный идентификатор уведомления
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Тип уведомления (например, "email").
+                recipient:
+                  type: string
+                  description: Получатель уведомлений.
+                message:
+                  type: string
+                  description: Сообщение для отправки.
+                scheduled_time:
+                  type: string
+                  format: date-time
+                  description: Время, когда уведомление должно быть отправлено.
+              required:
+                - type
+                - recipient
+                - message
+                - scheduled_time
+      responses:
+        '200':
+          description: Уведомление успешно обновлено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  id:
+                    type: string
+                    description: Уникальный идентификатор уведомления
+        '400':
+          description: Неверные данные запроса
+        '404':
+          description: Уведомление не найдено
+  /register:
+    post:
+      description: Регистрирует пользователя в системе и выдает уникальный токен.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Имя пользователя для регистрации.
+                last_name:
+                  type: string
+                  description: Фамилия пользователя
+              required:
+                - name
+                - last_name
+      responses:
+        '200':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Статус операции
+                  auth_token:
+                    type: string
+                    description: Уникальный токен аутентификации пользователя
+        '400':
+          description: Неверные данные запроса
