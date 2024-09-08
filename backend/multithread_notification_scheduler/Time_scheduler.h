@@ -40,8 +40,8 @@ public:
     std::unordered_map<std::string, std::vector<Time_scheduler::Notification>> users;
 private:
     std::deque<Notification> dq;
-    std::mutex m;
     std::condition_variable cv;
+    std::mutex m;
 };
 
 #endif //NOTIFICATION_SERVICE_TIME_SCHEDULER_H

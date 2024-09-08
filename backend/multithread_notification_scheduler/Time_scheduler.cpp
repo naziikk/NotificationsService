@@ -1,7 +1,6 @@
 #include "Time_scheduler.h"
 
 void Time_scheduler::sendEmail(const Notification& notification) {
-    std::lock_guard<std::mutex> lock(m);
     std::cout << "Отправка email на " << notification.email
               << " с темой '" << notification.theme
               << "' и сообщением '" << notification.message << "'\n";
@@ -21,6 +20,7 @@ void Time_scheduler::workerThread() {
             std::unique_lock<std::mutex> lock(m);
             std::cout << "Waiting for notification...\n";
             cv.wait(lock, [this] {
+                std::cout << dq.size() << '\n';
                 return !dq.empty();
             });
             std::cout << "Notification received.\n";
@@ -39,7 +39,7 @@ void Time_scheduler::workerThread() {
         std::cout << "Processing notification: " << notification.token << '\n';
         {
             std::lock_guard<std::mutex> lock(m);
-            auto& notifications = users[notification.token];
+            auto notifications = users[notification.token];
             auto it = std::find_if(notifications.begin(), notifications.end(),
                                    [notification](const Notification& notif) {
                                        return notif.id == notification.id;
@@ -61,15 +61,16 @@ void Time_scheduler::scheduleNotification(int id, const std::string& email, cons
                                           const std::string& message, const std::tm& send_time_tm,
                                           const std::string& token) {
     auto send_time = std::chrono::system_clock::from_time_t(std::mktime(const_cast<std::tm*>(&send_time_tm)));
+    cv.notify_one();
     Notification notification{id, theme, message, email, send_time, token};
     {
         std::lock_guard<std::mutex> lock(m);
-        dq.push_back(notification);
         users[token].push_back(notification);
+        dq.push_back(notification);
+        std::cout << token << " ";
         std::cout << "Scheduled notification for token: " << token << '\n';
         std::cout << "Queue size: " << dq.size() << '\n';
     }
-    cv.notify_one();
 }
 
 // обновляем уведомление в случае нахождения в списке
