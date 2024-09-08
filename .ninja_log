@@ -12,3 +12,6 @@
 4	691	1725779401260993996	CMakeFiles/NotificationsService.dir/backend/multithread_notification_scheduler/Time_scheduler.cpp.o	4121fd44d9270cc1
 2	3499	1725779404059643084	CMakeFiles/NotificationsService.dir/main.cpp.o	1752dd37190432d4
 3499	3617	1725779404189468186	NotificationsService	946c713c6366512c
+10	677	1725780217937758308	CMakeFiles/NotificationsService.dir/backend/multithread_notification_scheduler/Time_scheduler.cpp.o	4121fd44d9270cc1
+9	3357	1725780220608886143	CMakeFiles/NotificationsService.dir/main.cpp.o	1752dd37190432d4
+3357	3468	1725780220729271931	NotificationsService	946c713c6366512c
