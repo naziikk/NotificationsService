@@ -27,18 +27,21 @@ public:
     void workerThread();
 
     void scheduleNotification(int id, const std::string& email, const std::string& theme,
-                              const std::string& message, const std::tm& time, const std::string token);
+                              const std::string& message, const std::tm& time, const std::string& token);
 
     bool updateNotificationDetails(int id, const std::string& email, const std::string& theme,
-                                   const std::string& message, const std::tm& time, const std::string token);
+                                   const std::string& message, const std::tm& time, const std::string& token);
 
-    bool deleteNotification(int id, const std::string token);
+    bool deleteNotification(int id, const std::string& token);
+
+    std::vector<Time_scheduler::Notification> getNotifications(std::string token);
 
     std::map<std::pair<std::string, std::string>, std::string> db;
+    std::unordered_map<std::string, std::vector<Time_scheduler::Notification>> users;
+private:
     std::deque<Notification> dq;
     std::mutex m;
     std::condition_variable cv;
-    std::unordered_map<std::string, std::vector<Time_scheduler::Notification>> users;
 };
 
 #endif //NOTIFICATION_SERVICE_TIME_SCHEDULER_H

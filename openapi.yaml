@@ -5,6 +5,17 @@ info:
 servers:
   - url: http://localhost:8080/
 paths:
+  /:
+    get:
+      description: Возвращает HTML-страницу интерфейса.
+      responses:
+        '200':
+          description: Успешное получение страницы
+          content:
+            text/html:
+              schema:
+                type: string
+
   /notifications:
     post:
       description: Создает новое уведомление с заданными параметрами.
@@ -56,6 +67,8 @@ paths:
                     description: Время, когда уведомление будет отправлено.
         '400':
           description: Неверные данные запроса
+        '403':
+          description: Доступ запрещен
 
   /notifications/{id}:
     delete:
@@ -67,6 +80,18 @@ paths:
           schema:
             type: string
           description: Уникальный идентификатор уведомления
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auth_token:
+                  type: string
+                  description: Уникальный токен авторизации
+              required:
+                - auth_token
       responses:
         '200':
           description: Уведомление успешно удалено
@@ -77,6 +102,8 @@ paths:
                 properties:
                   status:
                     type: string
+        '403':
+          description: Доступ запрещен
         '404':
           description: Уведомление не найдено
 
@@ -109,11 +136,15 @@ paths:
                   type: string
                   format: date-time
                   description: Время, когда уведомление должно быть отправлено.
+                auth_token:
+                  type: string
+                  description: Уникальный токен авторизации
               required:
                 - type
                 - recipient
                 - message
                 - scheduled_time
+                - auth_token
       responses:
         '200':
           description: Уведомление успешно обновлено
@@ -129,8 +160,11 @@ paths:
                     description: Уникальный идентификатор уведомления
         '400':
           description: Неверные данные запроса
+        '403':
+          description: Доступ запрещен
         '404':
           description: Уведомление не найдено
+
   /register:
     post:
       description: Регистрирует пользователя в системе и выдает уникальный токен.
@@ -166,6 +200,7 @@ paths:
                     description: Уникальный токен аутентификации пользователя
         '400':
           description: Неверные данные запроса
+
   /token:
     post:
       description: Получение забытого токена по имени и фамилии
@@ -189,3 +224,60 @@ paths:
                 - name
                 - last_name
                 - email
+      responses:
+        '200':
+          description: Токен успешно отправлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Статус операции
+        '400':
+          description: Неверные данные запроса
+        '401':
+          description: Пользователь не найден или не авторизован
+    /notifications/token:
+      get:
+        description: Возвращает список уведомлений, связанных с указанным токеном авторизации.
+        parameters:
+          - in: query
+            name: auth_token
+            required: true
+            schema:
+              type: string
+            description: Уникальный токен авторизации пользователя
+        responses:
+          '200':
+            description: Успешное получение уведомлений
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Уникальный идентификатор уведомления
+                      theme:
+                        type: string
+                        description: Тема уведомления
+                      recipient:
+                        type: string
+                        description: Получатель уведомления
+                      message:
+                        type: string
+                        description: Текст уведомления
+                      scheduled_time:
+                        type: string
+                        format: date-time
+                        description: Время, когда уведомление должно быть отправлено
+          '400':
+            description: Неверные данные запроса
+          '403':
+            description: Доступ запрещен
+          '404':
+            description: Уведомления не найдены для данного токена

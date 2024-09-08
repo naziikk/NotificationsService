@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <fstream>
 #include <regex>
-#include "backend/requestParser.h"
 
 
 class RequestHandler {
@@ -22,6 +21,8 @@ public:
     void HttpNotificationPost(const httplib::Request& request, httplib::Response &res, int id);
 
     void HttpRegisterPost(const httplib::Request& request, httplib::Response &res);
+
+    void HtttpNotificationsGet(const httplib::Request& request, httplib::Response &res);
 
     bool isValidEmail(const std::string& email);
 

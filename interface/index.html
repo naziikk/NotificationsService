@@ -197,8 +197,12 @@
         <button onclick="showForm('create')"><i class="fas fa-plus"></i> Create New Notification</button>
         <button onclick="showForm('edit')"><i class="fas fa-edit"></i> Edit Notification</button>
         <button onclick="showForm('delete')"><i class="fas fa-trash"></i> Delete Notification</button>
+        <button onclick="showForm('register')"><i class="fas fa-user-plus"></i> Register</button>
+        <button onclick="showForm('recover')"><i class="fas fa-key"></i> Recover Token</button>
+        <button onclick="showForm('view')"><i class="fas fa-eye"></i> View Notifications by Token</button>
     </div>
 
+    <!-- Форма для создания уведомления -->
     <form id="createForm">
         <h2>Create Notification</h2>
         <label for="email">Email:</label>
@@ -213,10 +217,14 @@
         <label for="sendTime">Send Date and Time:</label>
         <input type="datetime-local" id="sendTime" name="sendTime" required>
 
+        <label for="auth_token">Authorization token:</label>
+        <input type="text" id="auth_token" name="auth_token" required>
+
         <button type="button" class="submit" onclick="submitForm('create')">Create</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
     </form>
 
+    <!-- Форма для редактирования уведомления -->
     <form id="editForm">
         <h2>Edit Notification</h2>
         <label for="editId">Notification ID:</label>
@@ -234,23 +242,66 @@
         <label for="editSendTime">Send Date and Time:</label>
         <input type="datetime-local" id="editSendTime" name="sendTime" required>
 
+        <label for="auth_token1">Authorization token:</label>
+        <input type="text" id="auth_token1" name="auth_token1" required>
+
         <button type="button" class="submit" onclick="submitForm('edit')">Edit</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
     </form>
 
+    <!-- Форма для удаления уведомления -->
     <form id="deleteForm">
         <h2>Delete Notification</h2>
         <label for="deleteId">Notification ID:</label>
         <input type="number" id="deleteId" name="id" required>
 
+        <label for="deleteAuthToken">Authorization token:</label>
+        <input type="text" id="deleteAuthToken" name="auth_token" required>
+
         <button type="button" class="submit" onclick="submitForm('delete')">Delete</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
     </form>
+
+    <!-- Форма для регистрации -->
+    <form id="registerForm">
+        <h2>Register</h2>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName" name="lastName" required>
+
+        <button type="button" class="submit" onclick="submitForm('register')">Register</button>
+        <button type="button" class="back-button" onclick="goBack()">Back</button>
+    </form>
+
+    <!-- Форма для восстановления токена -->
+    <form id="recoverForm">
+        <h2>Recover Token</h2>
+        <label for="recoverName">Name:</label>
+        <input type="text" id="recoverName" name="recoverName" required>
+
+        <label for="recoverLastName">Last Name:</label>
+        <input type="text" id="recoverLastName" name="recoverLastName" required>
+
+        <button type="button" class="submit" onclick="submitForm('recover')">Recover</button>
+        <button type="button" class="back-button" onclick="goBack()">Back</button>
+    </form>
+
+    <!-- Форма для просмотра уведомлений по токену -->
+    <form id="viewForm">
+        <h2>View Notifications by Token</h2>
+        <label for="viewToken">Authorization token:</label>
+        <input type="text" id="viewToken" name="viewToken" required>
+
+        <button type="button" class="submit" onclick="submitForm('view')">View</button>
+        <button type="button" class="back-button" onclick="goBack()">Back</button>
+    </form>
+
     <div class="result-container">
         <div id="result"></div>
     </div>
 </div>
-
 
 <script>
     function showForm(formType) {
@@ -258,22 +309,26 @@
         document.querySelectorAll('form').forEach(form => form.style.display = 'none');
         document.getElementById(formType + 'Form').style.display = 'flex';
     }
+
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
         document.querySelectorAll('.container, h2, .actions button, button.submit, .back-button, input, textarea, .success, .error').forEach(el => el.classList.toggle('dark-mode'));
         const isDarkMode = document.body.classList.contains('dark-mode');
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
     }
+
     window.onload = function() {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
             toggleTheme();
         }
     };
+
     function goBack() {
         document.querySelector('.actions').style.display = 'block';
         document.querySelectorAll('form').forEach(form => form.style.display = 'none');
     }
+
     async function submitForm(action) {
         let url = 'http://localhost:8080/notifications';
         let method = 'POST';
@@ -284,7 +339,8 @@
                 type: document.getElementById('theme').value,
                 recipient: document.getElementById('email').value,
                 message: document.getElementById('message').value,
-                scheduled_time: document.getElementById('sendTime').value
+                scheduled_time: document.getElementById('sendTime').value,
+                auth_token: document.getElementById('auth_token').value
             };
         } else if (action === 'edit') {
             url += `/${document.getElementById('editId').value}`;
@@ -293,14 +349,34 @@
                 type: document.getElementById('editTheme').value,
                 recipient: document.getElementById('editEmail').value,
                 message: document.getElementById('editMessage').value,
-                scheduled_time: document.getElementById('editSendTime').value
+                scheduled_time: document.getElementById('editSendTime').value,
+                auth_token: document.getElementById('auth_token1').value
             };
         } else if (action === 'delete') {
             url += `/${document.getElementById('deleteId').value}`;
             method = 'DELETE';
+            data = {
+                auth_token: document.getElementById('deleteAuthToken').value
+            };
+        } else if (action === 'register') {
+            url = 'http://localhost:8080/register';
+            method = 'POST';
+            data = {
+                name: document.getElementById('name').value,
+                last_name: document.getElementById('lastName').value
+            };
+        } else if (action === 'recover') {
+            url = 'http://localhost:8080/token';
+            method = 'POST';
+            data = {
+                name: document.getElementById('recoverName').value,
+                last_name: document.getElementById('recoverLastName').value
+            };
+        } else if (action === 'view') {
+            url = 'http://localhost:8080/notifications';
+            method = 'GET';
+            url += `?auth_token=${encodeURIComponent(document.getElementById('viewToken').value)}`;
         }
-
-        console.log('Sending data:', JSON.stringify(data, null, 2));
 
         try {
             const response = await fetch(url, {
@@ -308,19 +384,21 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: method !== 'DELETE' ? JSON.stringify(data) : null,
+                body: method !== 'GET' ? JSON.stringify(data) : undefined,
             });
 
-            const result = await response.json();
             const resultDiv = document.getElementById('result');
+            const resultText = await response.text();
             resultDiv.style.display = 'block';
+
             if (response.ok) {
-                resultDiv.textContent = `Success! ${result.status} ID: ${result.id}`;
+                resultDiv.textContent = `Success!\n ${resultText}`;
                 resultDiv.className = 'success';
             } else {
-                resultDiv.textContent = `Error: ${result.status}`;
+                resultDiv.textContent = `Error: ${resultText}`;
                 resultDiv.className = 'error';
             }
+
             setTimeout(() => {
                 resultDiv.style.display = 'none';
             }, 3000);
@@ -338,3 +416,5 @@
 </script>
 </body>
 </html>
+
+

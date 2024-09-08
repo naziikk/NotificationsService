@@ -47,6 +47,10 @@ int main() {
     server.Post("/token", [](const httplib::Request& request, httplib::Response &res) {
         handler.HttpPostToken(request, res);
     });
+
+    server.Get("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
+        handler.HtttpNotificationsGet(request, res);
+    });
     std::cout << "Server is listening http://localhost:8080" << '\n';
     server.listen("0.0.0.0", 8080);
     worker.join();

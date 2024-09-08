@@ -132,8 +132,28 @@ void RequestHandler::HttpRegisterPost(const httplib::Request& request, httplib::
     scheduler.db[{name, last_name}] = token;
     scheduler.users[token] = std::vector<Time_scheduler::Notification>();
     json response = {
-            {"status", "done"},
             {"auth_token", token}
     };
     res.set_content(response.dump(), "application/json");
+}
+
+void RequestHandler::HtttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
+    std::string token = request.matches[1];
+    if (!validateToken(token)) {
+        res.status = 403;
+        res.set_content(R"({"status": "access denied"})", "application/json");
+        return;
+    }
+    std::vector<Time_scheduler::Notification> arr = scheduler.getNotifications(token);
+    nlohmann::json jsonResponse;
+    for (const auto& el : arr) {
+        jsonResponse.push_back({
+               {"id", el.id},
+               {"email", el.email},
+               {"theme", el.theme},
+               {"message", el.message},
+               {"sending_time", std::chrono::system_clock::to_time_t(el.sending_time)}
+       });
+    }
+    res.set_content(jsonResponse.dump(), "application/json");
 }

@@ -13,18 +13,27 @@ void Time_scheduler::sendEmail(const Notification& notification) {
                               notification.email, notification.theme, notification.message);
 }
 void Time_scheduler::workerThread() {
-    while (true){
+    std::cout << "Worker thread started\n";
+    while (true) {
         Notification notification;
         {
             std::unique_lock<std::mutex> lock(m);
-            cv.wait(lock, [this] { return !dq.empty(); });
+            cv.wait(lock, [this] {
+                std::cout << "Waiting... dq size: " << dq.size() << '\n';
+                return !dq.empty();
+            });
             notification = dq.front();
             dq.pop_front();
+            std::cout << "Notification dequeued: " << notification.token << '\n';
         }
+
         auto now = std::chrono::system_clock::now();
         if (now < notification.sending_time) {
+            std::cout << "Sleeping until: " << std::chrono::system_clock::to_time_t(notification.sending_time) << '\n';
             std::this_thread::sleep_until(notification.sending_time);
         }
+
+        std::cout << "Processing notification: " << notification.token << '\n';
         {
             std::lock_guard<std::mutex> lock(m);
             auto it = std::find_if(users[notification.token].begin(), users[notification.token].end(),
@@ -46,21 +55,24 @@ void Time_scheduler::workerThread() {
 
 void Time_scheduler::scheduleNotification(int id, const std::string& email, const std::string& theme,
                                           const std::string& message, const std::tm& send_time_tm,
-                                          const std::string token) {
+                                          const std::string& token) {
     auto send_time = std::chrono::system_clock::from_time_t(std::mktime(const_cast<std::tm*>(&send_time_tm)));
     Notification notification{id, theme, message, email, send_time, token};
     {
         std::lock_guard<std::mutex> lock(m);
         dq.push_back(notification);
         users[token].push_back(notification);
+        std::cout << token << '\n';
+        std::cout << dq.size() << '\n';
     }
+    std::cout << dq.size() << '\n';
     cv.notify_one();
 }
 
 // обновляем уведомление в случае нахождения в списке
 bool Time_scheduler::updateNotificationDetails(int id, const std::string& email, const std::string& theme,
                                                const std::string& message, const std::tm& send_time_tm,
-                                               const std::string token) {
+                                               const std::string& token) {
     std::lock_guard<std::mutex> lock(m);
     auto it = std::find_if(users[token].begin(), users[token].end(),
                            [id](const Notification& notif) { return notif.id == id; });
@@ -74,7 +86,7 @@ bool Time_scheduler::updateNotificationDetails(int id, const std::string& email,
 }
 
 // удаляем уведомление в случае его нахождения в списке
-bool Time_scheduler::deleteNotification(int id, const std::string token) {
+bool Time_scheduler::deleteNotification(int id, const std::string& token) {
     std::lock_guard<std::mutex> lock(m);
     auto it = std::find_if(users[token].begin(), users[token].end(),
                            [id](const Notification& notif) { return notif.id == id; });
@@ -83,5 +95,9 @@ bool Time_scheduler::deleteNotification(int id, const std::string token) {
         return true;
     }
     return false;
+}
+
+std::vector<Time_scheduler::Notification> Time_scheduler::getNotifications(std::string token) {
+    return users[token];
 }
 
