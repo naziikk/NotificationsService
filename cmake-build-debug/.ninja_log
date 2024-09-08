@@ -1,6 +1,0 @@
-# ninja log v5
-1	73	1725700384186991974	build.ninja	776dbcea43207d0f
-1	568	1725700384756918199	CMakeFiles/NotificationsService.dir/backend/email_sender/Email_sender.cpp.o	9b4bd4f7006d292e
-1	672	1725700384862052542	CMakeFiles/NotificationsService.dir/backend/multithread_notification_scheduler/Time_scheduler.cpp.o	4121fd44d9270cc1
-0	3566	1725700387748589290	CMakeFiles/NotificationsService.dir/main.cpp.o	1752dd37190432d4
-3567	3681	1725700387871202830	NotificationsService	946c713c6366512c

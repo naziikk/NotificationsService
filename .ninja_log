@@ -1,0 +1,14 @@
+# ninja log v5
+5	3749	1725714344278992162	CMakeFiles/NotificationsService.dir/main.cpp.o	1752dd37190432d4
+3749	3864	1725714344408097178	NotificationsService	946c713c6366512c
+1	672	1725713447349970163	CMakeFiles/NotificationsService.dir/backend/multithread_notification_scheduler/Time_scheduler.cpp.o	4121fd44d9270cc1
+1	570	1725713447249360435	CMakeFiles/NotificationsService.dir/backend/email_sender/Email_sender.cpp.o	9b4bd4f7006d292e
+0	91	1725715251031513661	build.ninja	c89ef4276dcb412
+0	120	1725715251031513661	build.ninja	8963cccc53954295
+2	547	1725715251581815376	CMakeFiles/NotificationsService.dir/backend/email_sender/Email_sender.cpp.o	9b4bd4f7006d292e
+2	650	1725715251683584496	CMakeFiles/NotificationsService.dir/backend/multithread_notification_scheduler/Time_scheduler.cpp.o	4121fd44d9270cc1
+2	3473	1725715254500331662	CMakeFiles/NotificationsService.dir/main.cpp.o	1752dd37190432d4
+3473	3584	1725715254618451712	NotificationsService	946c713c6366512c
+4	691	1725779401260993996	CMakeFiles/NotificationsService.dir/backend/multithread_notification_scheduler/Time_scheduler.cpp.o	4121fd44d9270cc1
+2	3499	1725779404059643084	CMakeFiles/NotificationsService.dir/main.cpp.o	1752dd37190432d4
+3499	3617	1725779404189468186	NotificationsService	946c713c6366512c

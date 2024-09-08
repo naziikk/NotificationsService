@@ -1,0 +1,3 @@
+/Users/nazarzakrevskij/CLionProjects/NotificationsService/CMakeFiles/NotificationsService.dir
+/Users/nazarzakrevskij/CLionProjects/NotificationsService/CMakeFiles/edit_cache.dir
+/Users/nazarzakrevskij/CLionProjects/NotificationsService/CMakeFiles/rebuild_cache.dir

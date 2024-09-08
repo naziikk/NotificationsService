@@ -28,11 +28,15 @@ paths:
                   type: string
                   format: date-time
                   description: Время, когда уведомление должно быть отправлено.
+                auth_token:
+                  type: string
+                  description: Уникальный токен авторизации
               required:
                 - type
                 - recipient
                 - message
                 - scheduled_time
+                - auth_token
       responses:
         '200':
           description: Уведомление успешно создано

@@ -5,7 +5,7 @@ void Time_scheduler::sendEmail(const Notification& notification) {
               << " с темой '" << notification.theme
               << "' и сообщением '" << notification.message << "'\n";
     Email_sender sender;
-    std::string path = "/Users/nazarzakrevskij/CLionProjects/Notification-Service/config.ini";
+    std::string path = "/Users/nazarzakrevskij/CLionProjects/NotificationsService/config.ini";
     std::string email = sender.getDataFromFile(path, "USERNAME");
     std::string application_password = sender.getDataFromFile(path, "APP_PASSWORD");
     std::string from = sender.getDataFromFile(path, "USERNAME");
@@ -27,16 +27,18 @@ void Time_scheduler::workerThread() {
         }
         {
             std::lock_guard<std::mutex> lock(m);
-            if (deleted.find(notification.id) == deleted.end()) {
-                if (updated.find(notification.id) != updated.end()) {
-                    notification = updated[notification.id];
-                    updated.erase(notification.id);
-                }
-                sendEmail(notification);
-                all.erase(notification.id);
+            auto it = std::find_if(users[notification.token].begin(), users[notification.token].end(),
+                                   [notification](const Notification& notif) {
+                                       return notif.id == notification.id;
+                                   });
+            if (it != users[notification.token].end()) {
+                sendEmail(*it);
+                users[notification.token].erase(it);
+                std::cout << "Notification with id: " << notification.id
+                          << " and token: " << notification.token << " sent and deleted.\n";
             } else {
-                std::cout << "notification with id: " + std::to_string(notification.id) + " has been deleted.\n";
-                deleted.erase(notification.id);
+                std::cout << "Notification with id: " << notification.id
+                          << " and token: " << notification.token << " has been deleted.\n";
             }
         }
     }
@@ -44,36 +46,40 @@ void Time_scheduler::workerThread() {
 
 void Time_scheduler::scheduleNotification(int id, const std::string& email, const std::string& theme,
                                           const std::string& message, const std::tm& send_time_tm,
-                                          const std::string user_id) {
+                                          const std::string token) {
     auto send_time = std::chrono::system_clock::from_time_t(std::mktime(const_cast<std::tm*>(&send_time_tm)));
-    Notification notification{id, theme, message, email, send_time, user_id};
+    Notification notification{id, theme, message, email, send_time, token};
     {
         std::lock_guard<std::mutex> lock(m);
         dq.push_back(notification);
-        all.insert(id);
+        users[token].push_back(notification);
     }
     cv.notify_one();
 }
 
+// обновляем уведомление в случае нахождения в списке
 bool Time_scheduler::updateNotificationDetails(int id, const std::string& email, const std::string& theme,
                                                const std::string& message, const std::tm& send_time_tm,
-                                               const std::string user_id) {
+                                               const std::string token) {
     std::lock_guard<std::mutex> lock(m);
-    auto find = all.find(id);
-    if (find != all.end()) {
+    auto it = std::find_if(users[token].begin(), users[token].end(),
+                           [id](const Notification& notif) { return notif.id == id; });
+    if (it != users[token].end()) {
         auto send_time = std::chrono::system_clock::from_time_t(std::mktime(const_cast<std::tm*>(&send_time_tm)));
-        Notification notification{id, theme, message, email, send_time, user_id};
-        updated[id] = notification;
+        Notification notification{id, theme, message, email, send_time, token};
+        *it = notification;
         return true;
     }
     return false;
 }
 
-bool Time_scheduler::deleteNotification(int id, const std::string user_id) {
+// удаляем уведомление в случае его нахождения в списке
+bool Time_scheduler::deleteNotification(int id, const std::string token) {
     std::lock_guard<std::mutex> lock(m);
-    if (all.find(id) != all.end()) {
-        all.erase(id);
-        deleted.insert(id);
+    auto it = std::find_if(users[token].begin(), users[token].end(),
+                           [id](const Notification& notif) { return notif.id == id; });
+    if (it != users[token].end()) {
+        users[token].erase(it);
         return true;
     }
     return false;
