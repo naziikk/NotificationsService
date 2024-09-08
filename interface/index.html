@@ -99,6 +99,13 @@
             background-color: #e09e9e;
             transform: translateY(-2px);
         }
+        .info-text {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
         .result-container {
             display: flex;
             justify-content: center;
@@ -129,9 +136,6 @@
             border: 1px solid #dc3545;
             background-color: #f8d7da;
         }
-
-
-
 
         body.dark-mode {
             background: linear-gradient(135deg, #1e1e1e, #333);
@@ -219,6 +223,7 @@
 
         <label for="auth_token">Authorization token:</label>
         <input type="text" id="auth_token" name="auth_token" required>
+        <p class="info-text">If you don't have an authorization token, please register to obtain one.</p>
 
         <button type="button" class="submit" onclick="submitForm('create')">Create</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
@@ -244,6 +249,7 @@
 
         <label for="auth_token1">Authorization token:</label>
         <input type="text" id="auth_token1" name="auth_token1" required>
+        <p class="info-text">If you don't have an authorization token, please register to obtain one.</p>
 
         <button type="button" class="submit" onclick="submitForm('edit')">Edit</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
@@ -257,6 +263,7 @@
 
         <label for="deleteAuthToken">Authorization token:</label>
         <input type="text" id="deleteAuthToken" name="auth_token" required>
+        <p class="info-text">If you don't have an authorization token, please register to obtain one.</p>
 
         <button type="button" class="submit" onclick="submitForm('delete')">Delete</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
@@ -272,6 +279,7 @@
         <input type="text" id="lastName" name="lastName" required>
 
         <button type="button" class="submit" onclick="submitForm('register')">Register</button>
+        <p class="info-text">Copy and save token after submit, it is your access for using app.</p>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
     </form>
 
@@ -283,6 +291,9 @@
 
         <label for="recoverLastName">Last Name:</label>
         <input type="text" id="recoverLastName" name="recoverLastName" required>
+
+        <label for="emailRecover">Email:</label>
+        <input type="text" id="emailRecover" name="emailRecover" required>
 
         <button type="button" class="submit" onclick="submitForm('recover')">Recover</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
@@ -370,7 +381,8 @@
             method = 'POST';
             data = {
                 name: document.getElementById('recoverName').value,
-                last_name: document.getElementById('recoverLastName').value
+                last_name: document.getElementById('recoverLastName').value,
+                email: document.getElementById('emailRecover').value
             };
         } else if (action === 'view') {
             url = 'http://localhost:8080/notifications';
@@ -416,5 +428,3 @@
 </script>
 </body>
 </html>
-
-

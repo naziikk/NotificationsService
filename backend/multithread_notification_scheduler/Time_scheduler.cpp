@@ -1,6 +1,7 @@
 #include "Time_scheduler.h"
 
 void Time_scheduler::sendEmail(const Notification& notification) {
+    std::lock_guard<std::mutex> lock(m);
     std::cout << "Отправка email на " << notification.email
               << " с темой '" << notification.theme
               << "' и сообщением '" << notification.message << "'\n";
@@ -10,7 +11,7 @@ void Time_scheduler::sendEmail(const Notification& notification) {
     std::string application_password = sender.getDataFromFile(path, "APP_PASSWORD");
     std::string from = sender.getDataFromFile(path, "USERNAME");
     sender.sendEmailYandexApi(email, application_password, from,
-                              notification.email, notification.theme, notification.message);
+                              notification.email, notification.theme, notification.message, false);
 }
 void Time_scheduler::workerThread() {
     std::cout << "Worker thread started\n";
@@ -18,10 +19,11 @@ void Time_scheduler::workerThread() {
         Notification notification;
         {
             std::unique_lock<std::mutex> lock(m);
+            std::cout << "Waiting for notification...\n";
             cv.wait(lock, [this] {
-                std::cout << "Waiting... dq size: " << dq.size() << '\n';
                 return !dq.empty();
             });
+            std::cout << "Notification received.\n";
             notification = dq.front();
             dq.pop_front();
             std::cout << "Notification dequeued: " << notification.token << '\n';
@@ -29,20 +31,22 @@ void Time_scheduler::workerThread() {
 
         auto now = std::chrono::system_clock::now();
         if (now < notification.sending_time) {
-            std::cout << "Sleeping until: " << std::chrono::system_clock::to_time_t(notification.sending_time) << '\n';
-            std::this_thread::sleep_until(notification.sending_time);
+            auto sleep_duration = notification.sending_time - now;
+            std::cout << "Sleeping for: " << std::chrono::duration_cast<std::chrono::seconds>(sleep_duration).count() << " seconds\n";
+            std::this_thread::sleep_for(sleep_duration);
         }
 
         std::cout << "Processing notification: " << notification.token << '\n';
         {
             std::lock_guard<std::mutex> lock(m);
-            auto it = std::find_if(users[notification.token].begin(), users[notification.token].end(),
+            auto& notifications = users[notification.token];
+            auto it = std::find_if(notifications.begin(), notifications.end(),
                                    [notification](const Notification& notif) {
                                        return notif.id == notification.id;
                                    });
-            if (it != users[notification.token].end()) {
+            if (it != notifications.end()) {
                 sendEmail(*it);
-                users[notification.token].erase(it);
+                notifications.erase(it);
                 std::cout << "Notification with id: " << notification.id
                           << " and token: " << notification.token << " sent and deleted.\n";
             } else {
@@ -62,10 +66,9 @@ void Time_scheduler::scheduleNotification(int id, const std::string& email, cons
         std::lock_guard<std::mutex> lock(m);
         dq.push_back(notification);
         users[token].push_back(notification);
-        std::cout << token << '\n';
-        std::cout << dq.size() << '\n';
+        std::cout << "Scheduled notification for token: " << token << '\n';
+        std::cout << "Queue size: " << dq.size() << '\n';
     }
-    std::cout << dq.size() << '\n';
     cv.notify_one();
 }
 
@@ -98,6 +101,7 @@ bool Time_scheduler::deleteNotification(int id, const std::string& token) {
 }
 
 std::vector<Time_scheduler::Notification> Time_scheduler::getNotifications(std::string token) {
+    std::lock_guard<std::mutex> lock(m);
     return users[token];
 }
 

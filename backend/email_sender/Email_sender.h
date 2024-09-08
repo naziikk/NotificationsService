@@ -12,7 +12,7 @@ public:
 
     bool sendEmailYandexApi(const std::string& email, const std::string& application_password,
                             const std::string& from, const std::string& to,
-                            const std::string& theme, const std::string& message);
+                            const std::string& theme, const std::string& message, bool is_html);
 
     std::string getDataFromFile(const std::string& filename, const std::string& target);
 

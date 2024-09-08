@@ -24,26 +24,41 @@ void RequestHandler::HttpPostToken(const httplib::Request& request, httplib::Res
     std::string name = parsed["name"];
     std::string last_name = parsed["last_name"];
     std::string email = parsed["email"];
+
     if (!isValidEmail(email)) {
         res.status = 400;
         res.set_content(R"({"status": "bad request"})", "application/json");
         return;
     }
+
     if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
         res.status = 401;
         res.set_content(R"({"status": "Unauthorized"})", "application/json");
         return;
     }
-    std::string message = "Привет! \n\nВот твой токен авторизации! \nЗапомни и не теряй его пожалуйста!\n" +
-                          scheduler.db[{name, last_name}];
+
+    std::string token = scheduler.db[{name, last_name}];
+    std::string message = R"(
+        <html>
+            <body>
+                <p>Добро пожаловать!</p>
+                <p>Ваш токен авторизации готов. Пожалуйста, храните его в безопасности и не передавайте третьим лицам!</p>
+                <details>
+                    <summary>Нажмите, чтобы увидеть токен</summary>
+                    <p>)" + token + R"(</p>
+                </details>
+            </body>
+        </html>
+    )";
+
     std::string theme = "Получение токена авторизации";
     Email_sender sender;
     std::string path = "/Users/nazarzakrevskij/CLionProjects/NotificationsService/config.ini";
     std::string key = sender.getDataFromFile(path, "USERNAME");
     std::string application_password = sender.getDataFromFile(path, "APP_PASSWORD");
     std::string from = sender.getDataFromFile(path, "USERNAME");
-    sender.sendEmailYandexApi(key, application_password, from,
-                              email, theme, message);
+
+    sender.sendEmailYandexApi(key, application_password, from, email, theme, message, true);
 }
 
 void RequestHandler::HttpNotificationDelete(const httplib::Request& request, httplib::Response &res) {

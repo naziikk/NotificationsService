@@ -34,7 +34,7 @@ size_t read_data(void* ptr, size_t size, size_t nmemb, void* userp) {
 
 bool Email_sender::sendEmailYandexApi(const std::string& email, const std::string& application_password,
                                       const std::string& from, const std::string& to,
-                                      const std::string& theme, const std::string& message) {
+                                      const std::string& theme, const std::string& message, bool is_html = false) {
     CURL* curl;
     CURLcode res = CURLE_OK;
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -43,7 +43,13 @@ bool Email_sender::sendEmailYandexApi(const std::string& email, const std::strin
         std::string from_header = "From: " + from;
         std::string to_header = "To: " + to;
         std::string subj = "Subject: " + theme;
-        std::string email_data = from_header + "\r\n" + to_header + "\r\n" + subj + "\r\n\r\n" + message + "\r\n";
+        std::string content_type = is_html ? "Content-Type: text/html; charset=utf-8" : "Content-Type: text/plain; charset=utf-8";
+        std::string email_data = from_header + "\r\n" +
+                                 to_header + "\r\n" +
+                                 subj + "\r\n" +
+                                 content_type + "\r\n\r\n" +
+                                 message + "\r\n";
+
         std::string url = "smtps://smtp.yandex.ru:465";
 
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -51,13 +57,16 @@ bool Email_sender::sendEmailYandexApi(const std::string& email, const std::strin
         curl_easy_setopt(curl, CURLOPT_USERNAME, email.c_str());
         curl_easy_setopt(curl, CURLOPT_PASSWORD, application_password.c_str());
         curl_easy_setopt(curl, CURLOPT_MAIL_FROM, from.c_str());
+
         struct curl_slist* recipients = nullptr;
         recipients = curl_slist_append(recipients, to.c_str());
         curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
+
         curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_data);
         curl_easy_setopt(curl, CURLOPT_READDATA, &email_data);
         curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
         curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // optional for debugging
+
         res = curl_easy_perform(curl);
 
         if (res != CURLE_OK) {
