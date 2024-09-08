@@ -166,3 +166,26 @@ paths:
                     description: Уникальный токен аутентификации пользователя
         '400':
           description: Неверные данные запроса
+  /token:
+    post:
+      description: Получение забытого токена по имени и фамилии
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Имя пользователя
+                last_name:
+                  type: string
+                  description: Фамилия пользователя
+                email:
+                  type: string
+                  description: Email получателя токена
+              required:
+                - name
+                - last_name
+                - email
