@@ -139,6 +139,33 @@ int main() {
             res.set_content(R"({"status": "not found"})", "application/json");
         }
     });
+
+    server.Get("/token", [](const httplib::Request& request, httplib::Response &res) {
+        auto parsed = json::parse(request.body);
+        std::string name = parsed["name"];
+        std::string last_name = parsed["last_name"];
+        std::string email = parsed["email"];
+        if (!isValidEmail(email)) {
+            res.status = 400;
+            res.set_content(R"({"status": "bad request"})", "application/json");
+            return;
+        }
+        if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
+            res.status = 401;
+            res.set_content(R"({"status": "Unauthorized"})", "application/json");
+            return;
+        }
+        std::string message = "Привет! Вот твой токен авторизации! Запомни и пожалуйста не теряй его!\n" +
+                scheduler.db[{name, last_name}];
+        std::string theme = "Получение токена авторизации";
+        Email_sender sender;
+        std::string path = "/Users/nazarzakrevskij/CLionProjects/NotificationsService/config.ini";
+        std::string key = sender.getDataFromFile(path, "USERNAME");
+        std::string application_password = sender.getDataFromFile(path, "APP_PASSWORD");
+        std::string from = sender.getDataFromFile(path, "USERNAME");
+        sender.sendEmailYandexApi(key, application_password, from,
+                                  email, theme, message);
+    });
     std::cout << "Server is listening http://localhost:8080" << '\n';
     server.listen("0.0.0.0", 8080);
     worker.join();
