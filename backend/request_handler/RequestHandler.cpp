@@ -151,7 +151,7 @@ void RequestHandler::HttpRegisterPost(const httplib::Request& request, httplib::
     res.set_content(response.dump(), "application/json");
 }
 
-void RequestHandler::HtttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
+void RequestHandler::HttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
     auto auth_token = request.get_param_value("auth_token");
     if (auth_token.empty()) {
         res.status = 400;

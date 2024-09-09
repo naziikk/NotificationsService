@@ -22,7 +22,7 @@ public:
 
     void HttpRegisterPost(const httplib::Request& request, httplib::Response &res);
 
-    void HtttpNotificationsGet(const httplib::Request& request, httplib::Response &res);
+    void HttpNotificationsGet(const httplib::Request& request, httplib::Response &res);
 
     bool isValidEmail(const std::string& email);
 

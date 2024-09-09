@@ -61,7 +61,6 @@ void Time_scheduler::scheduleNotification(int id, const std::string& email, cons
                                           const std::string& message, const std::tm& send_time_tm,
                                           const std::string& token) {
     auto send_time = std::chrono::system_clock::from_time_t(std::mktime(const_cast<std::tm*>(&send_time_tm)));
-    cv.notify_one();
     Notification notification{id, theme, message, email, send_time, token};
     {
         std::lock_guard<std::mutex> lock(m);
@@ -71,6 +70,7 @@ void Time_scheduler::scheduleNotification(int id, const std::string& email, cons
         std::cout << "Scheduled notification for token: " << token << '\n';
         std::cout << "Queue size: " << dq.size() << '\n';
     }
+    cv.notify_one();
 }
 
 // обновляем уведомление в случае нахождения в списке

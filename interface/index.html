@@ -20,14 +20,14 @@
             background: #ffffff;
             border-radius: 20px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-            padding: 50px;
-            width: 100%;
-            max-width: 700px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
             text-align: center;
         }
         h2 {
             color: #4a4a4a;
-            margin: 0 0 20px 0;
+            margin-bottom: 15px;
         }
         .actions, .form-container {
             margin-bottom: 20px;
@@ -36,32 +36,35 @@
             background-color: #a3c4bc;
             color: #fff;
             border: none;
-            padding: 18px 32px;
+            padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
-            margin: 5px 0;
+            margin: 5px;
             transition: background-color 0.3s, transform 0.2s;
+            font-size: 14px;
         }
         .actions button:hover {
-            background-color: rgba(142, 160, 166, 0.62);
+            background-color: #8ea0a6;
             transform: translateY(-2px);
         }
         form {
             display: none;
             flex-direction: column;
             margin-top: 20px;
+            text-align: left;
         }
         label {
             margin-bottom: 5px;
             color: #666;
-            text-align: left;
         }
         input, textarea {
-            padding: 12px;
+            padding: 10px;
             margin-bottom: 15px;
             border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 14px;
+            width: calc(100% - 22px);
+            box-sizing: border-box;
             transition: border-color 0.3s;
         }
         input:focus, textarea:focus {
@@ -70,13 +73,13 @@
         }
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 80px;
         }
         button.submit {
             background-color: #d1b3c4;
             color: #fff;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
@@ -89,10 +92,10 @@
             background-color: #f3b3b3;
             color: #fff;
             border: none;
-            padding: 10px;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 10px;
             transition: background-color 0.3s, transform 0.2s;
         }
         .back-button:hover {
@@ -102,27 +105,20 @@
         .info-text {
             font-size: 12px;
             color: #888;
-            margin-top: 5px;
-            margin-bottom: 15px;
-            text-align: left;
+            margin-bottom: 10px;
         }
         .result-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         #result {
             display: none;
-            margin-top: 1px;
-            padding: 10px;
+            margin-top: 10px;
+            padding: -10px;
             border-radius: 10px;
-            font-size: 12px;
-            width: 100%;
+            font-size: 13px;
             text-align: center;
-            min-height: 1px;
-            white-space: break-spaces;
+            white-space: unset;
             overflow: hidden;
             box-sizing: border-box;
         }
@@ -135,6 +131,20 @@
             color: #dc3545;
             border: 1px solid #dc3545;
             background-color: #f8d7da;
+        }
+        .copy-button {
+            background-color: #a3c4bc;
+            border: none;
+            padding: 5px 10px;
+            color: #fff;
+            border-radius: 5px;
+            margin-left: -65px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 12px;
+        }
+        .copy-button:hover {
+            background-color: #8ea0a6;
         }
 
         body.dark-mode {
@@ -345,7 +355,16 @@
         document.querySelector('.actions').style.display = 'block';
         document.querySelectorAll('form').forEach(form => form.style.display = 'none');
     }
-
+    function copyToClipboard(elementId) {
+        const inputElement = document.getElementById(elementId);
+        inputElement.select();
+        inputElement.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(inputElement.value).then(() => {
+            alert('Token copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    }
     async function submitForm(action) {
         let url = 'http://localhost:8080/notifications';
         let method = 'POST';
@@ -404,20 +423,39 @@
                 },
                 body: method !== 'GET' ? JSON.stringify(data) : undefined,
             });
+
             const resultDiv = document.getElementById('result');
             const resultText = await response.json();
             resultDiv.style.display = 'block';
 
             if (response.ok) {
-                resultDiv.innerHTML = formatResult(resultText);
+                if (action === 'register') {
+                    const authToken = resultText.auth_token;
+                    resultDiv.innerHTML = `
+                <div class="result-container">
+                    <h3>Registration Successful!</h3>
+                    <p>Your authorization token:</p>
+                    <div class="token-display">
+                        <input type="text" id="generatedToken" class="token-input" value="${authToken}" readonly>
+                        <button class="copy-button" onclick="copyToClipboard('generatedToken')">Copy</button>
+                    </div>
+                </div>
+            `;
+                } else {
+                    resultDiv.innerHTML = formatResult(resultText);
+                }
                 resultDiv.className = 'success';
             } else {
-                resultDiv.textContent = `Error: ${resultText.message || "An error occurred"}`;
+                resultDiv.innerHTML = `
+            <div class="result-container error">
+                <strong>Error:</strong> ${resultText.message || "An error occurred"}
+            </div>
+        `;
                 resultDiv.className = 'error';
             }
             setTimeout(() => {
                 resultDiv.style.display = 'none';
-            }, 3000);
+            }, 5000);
         } catch (error) {
             console.error('Error:', error);
             const resultDiv = document.getElementById('result');
@@ -426,7 +464,7 @@
             resultDiv.className = 'error';
             setTimeout(() => {
                 resultDiv.style.display = 'none';
-            }, 3000);
+            }, 5000);
         }
     }
 </script>

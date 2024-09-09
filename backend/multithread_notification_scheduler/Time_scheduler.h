@@ -13,6 +13,7 @@
 #include <algorithm>
 
 class Time_scheduler {
+public:
 struct Notification {
     int id;
     std::string theme;
@@ -21,6 +22,7 @@ struct Notification {
     std::chrono::system_clock::time_point sending_time;
     std::string token;
 };
+private:
 std::deque<Notification> dq;
 std::condition_variable cv;
 std::mutex m;
