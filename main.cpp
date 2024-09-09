@@ -169,7 +169,7 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
     res.set_content(response.dump(), "application/json");
 }
 
-void HtttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
+void HttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
     std::string token = request.matches[1];
     if (!validateToken(token)) {
         res.status = 403;
@@ -230,7 +230,7 @@ int main() {
     });
 
     server.Get("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
-        HtttpNotificationsGet(request, res);
+        HttpNotificationsGet(request, res);
     });
 
     std::cout << "Server is listening http://localhost:8080" << '\n';

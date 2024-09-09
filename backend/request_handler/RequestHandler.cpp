@@ -152,13 +152,18 @@ void RequestHandler::HttpRegisterPost(const httplib::Request& request, httplib::
 }
 
 void RequestHandler::HtttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
-    std::string token = request.matches[1];
-    if (!validateToken(token)) {
+    auto auth_token = request.get_param_value("auth_token");
+    if (auth_token.empty()) {
+        res.status = 400;
+        res.set_content(R"({"status": "bad request"})", "application/json");
+        return;
+    }
+    if (!validateToken(auth_token)) {
         res.status = 403;
         res.set_content(R"({"status": "access denied"})", "application/json");
         return;
     }
-    std::vector<Time_scheduler::Notification> arr = scheduler.getNotifications(token);
+    std::vector<Time_scheduler::Notification> arr = scheduler.getNotifications(auth_token);
     nlohmann::json jsonResponse;
     for (const auto& el : arr) {
         jsonResponse.push_back({

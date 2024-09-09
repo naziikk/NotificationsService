@@ -310,7 +310,7 @@
     </form>
 
     <div class="result-container">
-        <div id="result"></div>
+        <div id="result" style="display: none;"></div>
     </div>
 </div>
 
@@ -387,7 +387,7 @@
         } else if (action === 'view') {
             url = 'http://localhost:8080/notifications';
             method = 'GET';
-            url += `?auth_token=${encodeURIComponent(document.getElementById('viewToken').value)}`;
+            url += `/${document.getElementById('viewToken').value}`;
         }
 
         try {
