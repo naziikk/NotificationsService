@@ -13,15 +13,18 @@
 #include <algorithm>
 
 class Time_scheduler {
+struct Notification {
+    int id;
+    std::string theme;
+    std::string message;
+    std::string email;
+    std::chrono::system_clock::time_point sending_time;
+    std::string token;
+};
+std::deque<Notification> dq;
+std::condition_variable cv;
+std::mutex m;
 public:
-    struct Notification {
-        int id;
-        std::string theme;
-        std::string message;
-        std::string email;
-        std::chrono::system_clock::time_point sending_time;
-        std::string token;
-    };
     void sendEmail(const Notification& notification);
 
     void workerThread();
@@ -38,10 +41,6 @@ public:
 
     std::map<std::pair<std::string, std::string>, std::string> db;
     std::unordered_map<std::string, std::vector<Time_scheduler::Notification>> users;
-private:
-    std::deque<Notification> dq;
-    std::condition_variable cv;
-    std::mutex m;
 };
 
 #endif //NOTIFICATION_SERVICE_TIME_SCHEDULER_H

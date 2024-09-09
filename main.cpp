@@ -6,29 +6,12 @@
 #include "libraries/httplib.h"
 #include "libraries/nlohmann/json.hpp"
 #include "backend/multithread_notification_scheduler/Time_scheduler.h"
+#include "backend/auxiliary_functions/AuxiliaryFunctions.h"
 
 using json = nlohmann::json;
-
 Time_scheduler scheduler;
+AuxiliaryFunctions aux;
 int id = 1;
-
-bool isValidEmail(const std::string& email) {
-    const std::regex pattern(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)");
-    return std::regex_match(email, pattern);
-}
-
-bool validateToken(const std::string& token) {
-    return scheduler.users.find(token) != scheduler.users.end();
-}
-
-std::string generateAuthToken() {
-    std::string s = "1234567890abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    std::string token;
-    for (int i = 0; i < 16; i++) {
-        token += s[rand() % s.length()];
-    }
-    return token;
-}
 
 void HttpPostToken(const httplib::Request& request, httplib::Response &res) {
     auto parsed = json::parse(request.body);
@@ -36,7 +19,7 @@ void HttpPostToken(const httplib::Request& request, httplib::Response &res) {
     std::string last_name = parsed["last_name"];
     std::string email = parsed["email"];
 
-    if (!isValidEmail(email)) {
+    if (!aux.isValidEmail(email)) {
         res.status = 400;
         res.set_content(R"({"status": "bad request"})", "application/json");
         return;
@@ -76,7 +59,7 @@ void HttpNotificationDelete(const httplib::Request& request, httplib::Response &
     int id_1 = std::stoi(request.matches[1]);
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
-    if (!validateToken(token)) {
+    if (!aux.validateToken(token)) {
         res.status = 403;
         res.set_content(R"({"status": "access denied"})", "application/json");
         return;
@@ -94,7 +77,7 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
     int id_1 = std::stoi(request.matches[1]);
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
-    if (!validateToken(token)) {
+    if (!aux.validateToken(token)) {
         res.status = 403;
         res.set_content(R"({"status": "access denied"})", "application/json");
         return;
@@ -106,7 +89,7 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
     std::tm scheduled_time_tm = {};
     std::istringstream ss(scheduled_time_str);
     ss >> std::get_time(&scheduled_time_tm, "%Y-%m-%dT%H:%M:%S");
-    if (!isValidEmail(recipient)) {
+    if (!aux.isValidEmail(recipient)) {
         res.status = 400;
         res.set_content(R"({"status": "bad request"})", "application/json");
         return;
@@ -123,7 +106,7 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
 void HttpNotificationPost(const httplib::Request& request, httplib::Response &res, int id) {
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
-    if (!validateToken(token)) {
+    if (!aux.validateToken(token)) {
         res.status = 403;
         res.set_content(R"({"status": "access denied"})", "application/json");
         return;
@@ -137,7 +120,7 @@ void HttpNotificationPost(const httplib::Request& request, httplib::Response &re
     std::istringstream ss(scheduled_time_str);
     ss >> std::get_time(&scheduled_time_tm, "%Y-%m-%dT%H:%M:%S");
 
-    if (!isValidEmail(recipient)) {
+    if (!aux.isValidEmail(recipient)) {
         res.status = 400;
         res.set_content(R"({"status": "bad request"})", "application/json");
         return;
@@ -169,7 +152,7 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
         res.set_content(response.dump(), "application/json");
         return;
     }
-    std::string token = generateAuthToken();
+    std::string token = aux.generateAuthToken();
     scheduler.db[{name, last_name}] = token;
     scheduler.users[token] = std::vector<Time_scheduler::Notification>();
     json response = {
@@ -180,7 +163,7 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
 
 void HttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
     std::string token = request.matches[1];
-    if (!validateToken(token)) {
+    if (!aux.validateToken(token)) {
         res.status = 403;
         res.set_content(R"({"status": "access denied"})", "application/json");
         return;
