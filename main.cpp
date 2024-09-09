@@ -160,6 +160,15 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
     auto parsed = json::parse(request.body);
     std::string name = parsed["name"];
     std::string last_name = parsed["last_name"];
+    if (scheduler.db.find({name, last_name}) != scheduler.db.end()) {
+        std::string token = scheduler.db[{name, last_name}];
+        json response = {
+                {"message", "You already have a token!"},
+                {"auth_token", token}
+        };
+        res.set_content(response.dump(), "application/json");
+        return;
+    }
     std::string token = generateAuthToken();
     scheduler.db[{name, last_name}] = token;
     scheduler.users[token] = std::vector<Time_scheduler::Notification>();

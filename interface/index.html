@@ -334,7 +334,13 @@
             toggleTheme();
         }
     };
-
+    function formatResult(result) {
+        let formattedText = '';
+        for (const [key, value] of Object.entries(result)) {
+            formattedText += `<strong>${key}</strong>: ${value}<br>`;
+        }
+        return formattedText;
+    }
     function goBack() {
         document.querySelector('.actions').style.display = 'block';
         document.querySelectorAll('form').forEach(form => form.style.display = 'none');
@@ -398,19 +404,17 @@
                 },
                 body: method !== 'GET' ? JSON.stringify(data) : undefined,
             });
-
             const resultDiv = document.getElementById('result');
-            const resultText = await response.text();
+            const resultText = await response.json();
             resultDiv.style.display = 'block';
 
             if (response.ok) {
-                resultDiv.textContent = `Success!\n ${resultText}`;
+                resultDiv.innerHTML = formatResult(resultText);
                 resultDiv.className = 'success';
             } else {
-                resultDiv.textContent = `Error: ${resultText}`;
+                resultDiv.textContent = `Error: ${resultText.message || "An error occurred"}`;
                 resultDiv.className = 'error';
             }
-
             setTimeout(() => {
                 resultDiv.style.display = 'none';
             }, 3000);
