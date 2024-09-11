@@ -12,11 +12,11 @@ public:
     Time_scheduler scheduler;
     Email_sender sender;
 
-    bool validateToken(const std::string& token);
-
     bool isValidEmail(const std::string& email);
 
     std::string createJWT(const std::string& name, const std::string& last_name);
+
+    std::pair<std::string, std::string> extractNamefromJWT(const std::string& token);
 };
 
 

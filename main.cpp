@@ -107,6 +107,12 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
 void HttpNotificationPost(const httplib::Request& request, httplib::Response &res, int id) {
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
+    auto [name, last_name] = aux.extractNamefromJWT(token);
+    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
+        res.status = 403;
+        res.set_content(R"({"status": "access denied"})", "application/json");
+        return;
+    }
     if (!aux.validateToken(token)) {
         res.status = 403;
         res.set_content(R"({"status": "access denied"})", "application/json");
