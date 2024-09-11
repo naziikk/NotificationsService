@@ -10,6 +10,7 @@
 class AuxiliaryFunctions {
 public:
     Time_scheduler scheduler;
+
     Email_sender sender;
 
     bool isValidEmail(const std::string& email);

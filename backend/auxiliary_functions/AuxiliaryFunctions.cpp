@@ -33,9 +33,6 @@ std::pair<std::string, std::string> AuxiliaryFunctions::extractNamefromJWT(const
         }
         std::string name = subject.substr(0, pos);
         std::string last_name = subject.substr(pos + 1);
-        if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
-            throw std::runtime_error("User not found in the database");
-        }
         return {name, last_name};
     } catch (...) {
         std::cerr << "Failed to decode token: " << '\n';

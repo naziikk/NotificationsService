@@ -60,7 +60,8 @@ void HttpNotificationDelete(const httplib::Request& request, httplib::Response &
     int id_1 = std::stoi(request.matches[1]);
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
-    if (!aux.validateToken(token)) {
+    auto [name, last_name] = aux.extractNamefromJWT(token);
+    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
         res.status = 403;
         res.set_content(R"({"status": "access denied"})", "application/json");
         return;
@@ -78,7 +79,8 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
     int id_1 = std::stoi(request.matches[1]);
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
-    if (!aux.validateToken(token)) {
+    auto [name, last_name] = aux.extractNamefromJWT(token);
+    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
         res.status = 403;
         res.set_content(R"({"status": "access denied"})", "application/json");
         return;
@@ -113,12 +115,6 @@ void HttpNotificationPost(const httplib::Request& request, httplib::Response &re
         res.set_content(R"({"status": "access denied"})", "application/json");
         return;
     }
-    if (!aux.validateToken(token)) {
-        res.status = 403;
-        res.set_content(R"({"status": "access denied"})", "application/json");
-        return;
-    }
-
     std::string theme = parsed["type"];
     std::string recipient = parsed["recipient"];
     std::string message = parsed["message"];
@@ -161,6 +157,7 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
     }
     std::string token = aux.createJWT(name, last_name);
     scheduler.db[{name, last_name}] = token;
+    std::cout << scheduler.db[{name, last_name}] << ' ';
     scheduler.users[token] = std::vector<Time_scheduler::Notification>();
     json response = {
             {"auth_token", token}
@@ -170,11 +167,11 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
 
 void HttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
     std::string token = request.matches[1];
-    if (!aux.validateToken(token)) {
-        res.status = 403;
-        res.set_content(R"({"status": "access denied"})", "application/json");
-        return;
-    }
+//    if (!aux.validateToken(token)) {
+//        res.status = 403;
+//        res.set_content(R"({"status": "access denied"})", "application/json");
+//        return;
+//    }
     std::vector<Time_scheduler::Notification> arr = scheduler.getNotifications(token);
     nlohmann::json jsonResponse;
     for (const auto& el : arr) {
