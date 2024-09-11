@@ -8,11 +8,12 @@
 #include "backend/multithread_notification_scheduler/Time_scheduler.h"
 #include "backend/auxiliary_functions/AuxiliaryFunctions.h"
 
+
+using namespace std::chrono;
 using json = nlohmann::json;
 Time_scheduler scheduler;
 AuxiliaryFunctions aux;
 int id = 1;
-
 void HttpPostToken(const httplib::Request& request, httplib::Response &res) {
     auto parsed = json::parse(request.body);
     std::string name = parsed["name"];
@@ -152,7 +153,7 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
         res.set_content(response.dump(), "application/json");
         return;
     }
-    std::string token = aux.generateAuthToken();
+    std::string token = aux.createJWT(name, last_name);
     scheduler.db[{name, last_name}] = token;
     scheduler.users[token] = std::vector<Time_scheduler::Notification>();
     json response = {

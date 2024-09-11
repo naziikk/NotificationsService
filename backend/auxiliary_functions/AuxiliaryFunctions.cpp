@@ -6,14 +6,15 @@ bool AuxiliaryFunctions::isValidEmail(const std::string& email) {
 }
 
 bool AuxiliaryFunctions::validateToken(const std::string& token) {
-    return scheduler.users.find(token) != scheduler.users.end();
+    return scheduler.users.find(token) == scheduler.users.end();
 }
 
-std::string AuxiliaryFunctions::generateAuthToken() {
-    std::string s = "1234567890abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    std::string token;
-    for (int i = 0; i < 16; i++) {
-        token += s[rand() % s.length()];
-    }
+std::string AuxiliaryFunctions::createJWT(const std::string& name, const std::string& last_name) {
+    std::string path = "/Users/nazarzakrevskij/CLionProjects/NotificationsService/config.ini";
+    std::string private_key = sender.getDataFromFile(path, "SECRET_KEY");
+    std::string token = jwt::create()
+        .set_subject(name + " " + last_name)
+        .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{864000})
+        .sign(jwt::algorithm::hs256{private_key});
     return token;
 }
