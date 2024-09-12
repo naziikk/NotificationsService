@@ -5,6 +5,7 @@
 #include "../multithread_notification_scheduler/Time_scheduler.h"
 #include "../email_sender/Email_sender.h"
 #include <jwt-cpp/jwt.h>
+#include <pqxx/pqxx>
 #include <chrono>
 
 class AuxiliaryFunctions {

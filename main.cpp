@@ -7,12 +7,13 @@
 #include "libraries/nlohmann/json.hpp"
 #include "backend/multithread_notification_scheduler/Time_scheduler.h"
 #include "backend/auxiliary_functions/AuxiliaryFunctions.h"
-
+#include "postgres/PostgresProcessing.h"
 
 using namespace std::chrono;
 using json = nlohmann::json;
 Time_scheduler scheduler;
 AuxiliaryFunctions aux;
+
 int id = 1;
 void HttpPostToken(const httplib::Request& request, httplib::Response &res) {
     auto parsed = json::parse(request.body);
@@ -167,11 +168,12 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
 
 void HttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
     std::string token = request.matches[1];
-//    if (!aux.validateToken(token)) {
-//        res.status = 403;
-//        res.set_content(R"({"status": "access denied"})", "application/json");
-//        return;
-//    }
+    auto [name, last_name] = aux.extractNamefromJWT(token);
+    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
+        res.status = 403;
+        res.set_content(R"({"status": "access denied"})", "application/json");
+        return;
+    }
     std::vector<Time_scheduler::Notification> arr = scheduler.getNotifications(token);
     nlohmann::json jsonResponse;
     for (const auto& el : arr) {
@@ -197,40 +199,50 @@ std::string read_file(const std::string& path) {
 }
 
 int main() {
-    std::thread worker(&Time_scheduler::workerThread, &scheduler);
-    httplib::Server server;
+//    const char* db_url = std::getenv("DATABASE_URL");
+//    if (!db_url) {
+//        std::cerr << "DATABASE_URL environment variable is not set!" << std::endl;
+//        return 1;
+//    }
+//    std::string connect(db_url);
+    try {
+//        Database db(connect);
+        std::thread worker(&Time_scheduler::workerThread, &scheduler);
+        httplib::Server server;
+        server.Get("/", [](const httplib::Request& request, httplib::Response& res) {
+            std::string content = read_file("/Users/nazarzakrevskij/CLionProjects/NotificationsService/interface/index.html");
+            res.set_content(content, "text/html");
+        });
 
-    server.Get("/", [](const httplib::Request& request, httplib::Response& res) {
-        std::string content = read_file("/Users/nazarzakrevskij/CLionProjects/NotificationsService/interface/index.html");
-        res.set_content(content, "text/html");
-    });
+        server.Post("/register", [](const httplib::Request& request, httplib::Response &res) {
+            HttpRegisterPost(request, res);
+        });
 
-    server.Post("/register", [](const httplib::Request& request, httplib::Response &res) {
-        HttpRegisterPost(request, res);
-    });
+        server.Post("/notifications", [](const httplib::Request& request, httplib::Response& res) {
+            HttpNotificationPost(request, res, id);
+        });
 
-    server.Post("/notifications", [](const httplib::Request& request, httplib::Response& res) {
-        HttpNotificationPost(request, res, id);
-    });
+        server.Put("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
+            HttpNotificationPutById(request, res);
+        });
 
-    server.Put("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
-        HttpNotificationPutById(request, res);
-    });
+        server.Delete("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
+            HttpNotificationDelete(request, res);
+        });
 
-    server.Delete("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
-        HttpNotificationDelete(request, res);
-    });
+        server.Post("/token", [](const httplib::Request& request, httplib::Response &res) {
+            HttpPostToken(request, res);
+        });
 
-    server.Post("/token", [](const httplib::Request& request, httplib::Response &res) {
-        HttpPostToken(request, res);
-    });
+        server.Get("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
+            HttpNotificationsGet(request, res);
+        });
 
-    server.Get("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
-        HttpNotificationsGet(request, res);
-    });
-
-    std::cout << "Server is listening http://localhost:8080" << '\n';
-    server.listen("0.0.0.0", 8080);
-    worker.join();
+        std::cout << "Server is listening http://localhost:8080" << '\n';
+        server.listen("0.0.0.0", 8080);
+        worker.join();
+    } catch (const std::exception& e) {
+        std::cout << "Erorr: " << e.what() << '\n';
+    }
     return 0;
 }

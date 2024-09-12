@@ -231,9 +231,9 @@
         <label for="sendTime">Send Date and Time:</label>
         <input type="datetime-local" id="sendTime" name="sendTime" required>
 
-        <label for="auth_token">Authorization token:</label>
+        <label for="auth_token">JWT token:</label>
         <input type="text" id="auth_token" name="auth_token" required>
-        <p class="info-text">If you don't have an authorization token, please register to obtain one.</p>
+        <p class="info-text">If you don't have a JWT token, please register to obtain one.</p>
 
         <button type="button" class="submit" onclick="submitForm('create')">Create</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
@@ -257,9 +257,9 @@
         <label for="editSendTime">Send Date and Time:</label>
         <input type="datetime-local" id="editSendTime" name="sendTime" required>
 
-        <label for="auth_token1">Authorization token:</label>
+        <label for="auth_token1">JWT token:</label>
         <input type="text" id="auth_token1" name="auth_token1" required>
-        <p class="info-text">If you don't have an authorization token, please register to obtain one.</p>
+        <p class="info-text">If you don't have an JWT token, please register to obtain one.</p>
 
         <button type="button" class="submit" onclick="submitForm('edit')">Edit</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
@@ -271,9 +271,9 @@
         <label for="deleteId">Notification ID:</label>
         <input type="number" id="deleteId" name="id" required>
 
-        <label for="deleteAuthToken">Authorization token:</label>
+        <label for="deleteAuthToken">JWT token:</label>
         <input type="text" id="deleteAuthToken" name="auth_token" required>
-        <p class="info-text">If you don't have an authorization token, please register to obtain one.</p>
+        <p class="info-text">If you don't have an JWT token, please register to obtain one.</p>
 
         <button type="button" class="submit" onclick="submitForm('delete')">Delete</button>
         <button type="button" class="back-button" onclick="goBack()">Back</button>
@@ -312,7 +312,7 @@
     <!-- Форма для просмотра уведомлений по токену -->
     <form id="viewForm">
         <h2>View Notifications by Token</h2>
-        <label for="viewToken">Authorization token:</label>
+        <label for="viewToken">JWT token:</label>
         <input type="text" id="viewToken" name="viewToken" required>
 
         <button type="button" class="submit" onclick="submitForm('view')">View</button>
@@ -434,7 +434,7 @@
                     resultDiv.innerHTML = `
                 <div class="result-container">
                     <h3>Registration Successful!</h3>
-                    <p>Your authorization token:</p>
+                    <p>Your JWT token:</p>
                     <div class="token-display">
                         <input type="text" id="generatedToken" class="token-input" value="${authToken}" readonly>
                         <button class="copy-button" onclick="copyToClipboard('generatedToken')">Copy</button>
