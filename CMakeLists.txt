@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(CURL REQUIRED)
 
-include_directories("jwt-cpp/include")
-include_directories("libpqxx/include")
+include_directories("libraries/jwt-cpp/include")
+include_directories("libraries/libpqxx/include")
 include_directories("/opt/homebrew/opt/openssl@3/include")
 include_directories("/opt/homebrew/opt/libpqxx/include")
 

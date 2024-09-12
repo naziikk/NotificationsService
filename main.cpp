@@ -206,6 +206,7 @@ int main() {
 //    }
 //    std::string connect(db_url);
     try {
+//        std::string connect = "dbname=notifications host=localhost port=5432";
 //        Database db(connect);
         std::thread worker(&Time_scheduler::workerThread, &scheduler);
         httplib::Server server;

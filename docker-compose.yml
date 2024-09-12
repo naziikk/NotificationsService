@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: nazar_zakrevski
+      POSTGRES_PASSWORD: NazarZakrevski
+      POSTGRES_DB: notifications
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: "postgresql://nazar_zakrevski:NazarZakrevski@db:5432/notifications"
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"

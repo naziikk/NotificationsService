@@ -1,6 +1,6 @@
 #ifndef NOTIFICATIONSSERVICE_POSTGRESPROCESSIN_H
 #define NOTIFICATIONSSERVICE_POSTGRESPROCESSIN_H
-#include "pqxx/pqxx"
+#include <pqxx/pqxx>
 #include <iostream>
 
 class Database {
