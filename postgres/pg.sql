@@ -1,4 +1,4 @@
-DROP SCHEMA IF EXISTS notifications;
+DROP SCHEMA IF EXISTS notifications CASCADE;
 
 CREATE SCHEMA IF NOT EXISTS notifications;
 
@@ -13,6 +13,6 @@ CREATE TABLE IF NOT EXISTS notifications.users_notifications(
     message text,
     email text,
     sending_time TIMESTAMP WITH TIME ZONE,
-    auth_token varchar(16),
-    foreign key(auth_token) references users(auth_token)
+    jwt varchar(16),
+    foreign key(jwt) references users(auth_token)
 );

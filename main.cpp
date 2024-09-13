@@ -15,7 +15,7 @@ Time_scheduler scheduler;
 AuxiliaryFunctions aux;
 
 int id = 1;
-void HttpPostToken(const httplib::Request& request, httplib::Response &res) {
+void HttpPostToken(const httplib::Request& request, httplib::Response &res, Database& db) {
     auto parsed = json::parse(request.body);
     std::string name = parsed["name"];
     std::string last_name = parsed["last_name"];
@@ -26,7 +26,9 @@ void HttpPostToken(const httplib::Request& request, httplib::Response &res) {
         res.set_content(R"({"status": "bad request"})", "application/json");
         return;
     }
-
+    std::string req = "SELECT * FROM notifications.users WHERE name = '" + name + "' AND last_name = '" + last_name + "';";
+    pqxx::result a = db.executeQuery(req);
+    std::cout << a.query();
     if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
         res.status = 401;
         res.set_content(R"({"status": "Unauthorized"})", "application/json");
@@ -57,7 +59,7 @@ void HttpPostToken(const httplib::Request& request, httplib::Response &res) {
     sender.sendEmailYandexApi(key, application_password, from, email, theme, message, true);
 }
 
-void HttpNotificationDelete(const httplib::Request& request, httplib::Response &res) {
+void HttpNotificationDelete(const httplib::Request& request, httplib::Response &res, Database& db) {
     int id_1 = std::stoi(request.matches[1]);
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
@@ -76,7 +78,7 @@ void HttpNotificationDelete(const httplib::Request& request, httplib::Response &
     }
 }
 
-void HttpNotificationPutById(const httplib::Request& request, httplib::Response &res) {
+void HttpNotificationPutById(const httplib::Request& request, httplib::Response &res, Database& db) {
     int id_1 = std::stoi(request.matches[1]);
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
@@ -107,7 +109,7 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
     }
 }
 
-void HttpNotificationPost(const httplib::Request& request, httplib::Response &res, int id) {
+void HttpNotificationPost(const httplib::Request& request, httplib::Response &res, int id, Database& db) {
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
     auto [name, last_name] = aux.extractNamefromJWT(token);
@@ -143,7 +145,7 @@ void HttpNotificationPost(const httplib::Request& request, httplib::Response &re
     return;
 }
 
-void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
+void HttpRegisterPost(const httplib::Request& request, httplib::Response &res, Database& db) {
     auto parsed = json::parse(request.body);
     std::string name = parsed["name"];
     std::string last_name = parsed["last_name"];
@@ -166,7 +168,7 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res) {
     res.set_content(response.dump(), "application/json");
 }
 
-void HttpNotificationsGet(const httplib::Request &request, httplib::Response &res) {
+void HttpNotificationsGet(const httplib::Request &request, httplib::Response &res, Database& db) {
     std::string token = request.matches[1];
     auto [name, last_name] = aux.extractNamefromJWT(token);
     if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
@@ -199,51 +201,62 @@ std::string read_file(const std::string& path) {
 }
 
 int main() {
-//    const char* db_url = std::getenv("DATABASE_URL");
-//    if (!db_url) {
-//        std::cerr << "DATABASE_URL environment variable is not set!" << std::endl;
-//        return 1;
-//    }
-//    std::string connect(db_url);
     try {
-//        std::string connect = "dbname=notifications host=localhost port=5432";
-//        Database db(connect);
+        std::string connect = "dbname=notifications host=localhost port=5432";
+        Database db(connect);
+        db.initDbFromFile("/Users/nazarzakrevskij/CLionProjects/NotificationsService/postgres/pg.sql");
+        std::string insert_user = "INSERT INTO notifications.users (name, last_name, auth_token) VALUES "
+                                  "('John', 'Doe', 'token123'),"
+                                  "('Jane', 'Smith', 'token456'),"
+                                  "('Alice', 'Johnson', 'token789');";
+        db.executeQuery(insert_user);
+
+        pqxx::connection C(connect);
+        pqxx::work W(C);
+        pqxx::result R = W.exec("SELECT * FROM notifications.users;");
+//        for (const auto &row : R) {
+//            std::cout << "Name: " << row["name"].c_str() << ", "
+//                      << "Last Name: " << row["last_name"].c_str() << ", "
+//                      << "Auth Token: " << row["auth_token"].c_str() << '\n';
+//        }
+        W.commit();
         std::thread worker(&Time_scheduler::workerThread, &scheduler);
         httplib::Server server;
+
         server.Get("/", [](const httplib::Request& request, httplib::Response& res) {
             std::string content = read_file("/Users/nazarzakrevskij/CLionProjects/NotificationsService/interface/index.html");
             res.set_content(content, "text/html");
         });
 
-        server.Post("/register", [](const httplib::Request& request, httplib::Response &res) {
-            HttpRegisterPost(request, res);
+        server.Post("/register", [&db](const httplib::Request& request, httplib::Response &res) {
+            HttpRegisterPost(request, res, db);
         });
 
-        server.Post("/notifications", [](const httplib::Request& request, httplib::Response& res) {
-            HttpNotificationPost(request, res, id);
+        server.Post("/notifications", [&db](const httplib::Request& request, httplib::Response& res) {
+            HttpNotificationPost(request, res, id, db);
         });
 
-        server.Put("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
-            HttpNotificationPutById(request, res);
+        server.Put("/notifications/(.*)", [&db](const httplib::Request& request, httplib::Response &res) {
+            HttpNotificationPutById(request, res, db);
         });
 
-        server.Delete("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
-            HttpNotificationDelete(request, res);
+        server.Delete("/notifications/(.*)", [&db](const httplib::Request& request, httplib::Response &res) {
+            HttpNotificationDelete(request, res, db);
         });
 
-        server.Post("/token", [](const httplib::Request& request, httplib::Response &res) {
-            HttpPostToken(request, res);
+        server.Post("/token", [&db](const httplib::Request& request, httplib::Response &res) {
+            HttpPostToken(request, res, db);
         });
 
-        server.Get("/notifications/(.*)", [](const httplib::Request& request, httplib::Response &res) {
-            HttpNotificationsGet(request, res);
+        server.Get("/notifications/(.*)", [&db](const httplib::Request& request, httplib::Response &res) {
+            HttpNotificationsGet(request, res, db);
         });
 
         std::cout << "Server is listening http://localhost:8080" << '\n';
         server.listen("0.0.0.0", 8080);
         worker.join();
     } catch (const std::exception& e) {
-        std::cout << "Erorr: " << e.what() << '\n';
+        std::cout << "Error: " << e.what() << '\n';
     }
     return 0;
 }

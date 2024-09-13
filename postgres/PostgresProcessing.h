@@ -2,6 +2,7 @@
 #define NOTIFICATIONSSERVICE_POSTGRESPROCESSIN_H
 #include <pqxx/pqxx>
 #include <iostream>
+#include <fstream>
 
 class Database {
 pqxx::connection conn_;
@@ -11,7 +12,9 @@ public:
 
     Database(const std::string& con);
 
-    void executeQuery(const std::string& query);
+    pqxx::result executeQuery(const std::string& query);
+
+    void initDbFromFile(const std::string& filename);
 };
 
 

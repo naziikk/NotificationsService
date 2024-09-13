@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  db:
+  notifications:
     image: postgres:13
     environment:
       POSTGRES_USER: nazar_zakrevski
@@ -9,12 +9,20 @@ services:
       POSTGRES_DB: notifications
     ports:
       - "5432:5432"
+    networks:
+      - postgres
 
   app:
     build: .
     environment:
       DATABASE_URL: "postgresql://nazar_zakrevski:NazarZakrevski@db:5432/notifications"
     depends_on:
-      - db
+      - notifications
     ports:
       - "8080:8080"
+    networks:
+        - postgres
+
+networks:
+  postgres:
+    driver: bridge
