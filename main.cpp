@@ -162,15 +162,6 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res, D
         res.set_content(response.dump(), "application/json");
         return;
     }
-//    if (scheduler.db.find({name, last_name}) != scheduler.db.end()) {
-//        std::string token = scheduler.db[{name, last_name}];
-//        json response = {
-//                {"message", "You already have a token!"},
-//                {"auth_token", token}
-//        };
-//        res.set_content(response.dump(), "application/json");
-//        return;
-//    }
     std::string token = aux.createJWT(name, last_name);
     std::string insert = "INSERT INTO notifications.users (name, last_name, auth_token) VALUES "
                               "('" + name + "', '" + last_name + "', '" + token + "');";

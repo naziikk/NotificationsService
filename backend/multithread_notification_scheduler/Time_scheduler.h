@@ -41,7 +41,6 @@ public:
 
     std::vector<Time_scheduler::Notification> getNotifications(std::string token);
     Database* db;
-//    std::map<std::pair<std::string, std::string>, std::string> db;
     std::unordered_map<std::string, std::vector<Time_scheduler::Notification>> users;
 };
 

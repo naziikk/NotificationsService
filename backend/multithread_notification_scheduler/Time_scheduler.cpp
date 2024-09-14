@@ -37,6 +37,7 @@ void Time_scheduler::workerThread() {
         {
             std::lock_guard<std::mutex> lock(m);
             std::string jwt = notification.token;
+            std::cout << jwt << ' ' << notification.id << '\n';
             std::string req = "SELECT id, theme, message, email, sending_time, jwt FROM notifications.users_notifications "
                               "WHERE id = " + std::to_string(notification.id) +
                               " AND jwt = '" + jwt + "';";
@@ -47,21 +48,22 @@ void Time_scheduler::workerThread() {
                 std::cout << "Notification with id: " << notification.id
                           << " and token: " << notification.token << " has been deleted or not found.\n";
                 continue;
-            }
-            else {
+            } else {
                 int notification_id = res[0][0].as<int>();
                 std::string theme = res[0][1].as<std::string>();
                 std::string message = res[0][2].as<std::string>();
                 std::string email = res[0][3].as<std::string>();
-                std::chrono::system_clock::time_point sending_time = std::chrono::system_clock::from_time_t(
-                        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) + 60 * res[0][4].as<int>());
+                std::string sending_time_str = res[0][4].as<std::string>();
+                std::tm sending_time_tm = {};
+                std::istringstream ss(sending_time_str);
+                ss >> std::get_time(&sending_time_tm, "%Y-%m-%d %H:%M:%S"); // Парсинг строки времени
+                auto sending_time = std::chrono::system_clock::from_time_t(std::mktime(&sending_time_tm));
                 std::string jwt_in_db = res[0][5].as<std::string>();
-
                 auto now = std::chrono::system_clock::now();
                 if (sending_time > now) {
                     {
                         std::lock_guard<std::mutex> lock(m);
-//                        scheduleNotification(notification_id, theme, message, email, sending_time, jwt_in_db, db)
+                        // scheduleNotification(notification_id, theme, message, email, sending_time, jwt_in_db, db)
                     }
                     continue;
                 }
@@ -71,6 +73,7 @@ void Time_scheduler::workerThread() {
                                    "WHERE id = " + std::to_string(notification.id) +
                                    " AND jwt = '" + jwt + "';";
                 db->executeQuery(req1);
+
                 std::cout << "Notification with id: " << notification.id
                           << " and token: " << notification.token << " sent and deleted.\n";
             }
@@ -117,16 +120,13 @@ bool Time_scheduler::updateNotificationDetails(int id, const std::string& email,
                            " AND jwt = '" + token + "';";
         db.executeQuery(req2);
 
-        auto send_time = std::chrono::system_clock::from_time_t(std::mktime(const_cast<std::tm*>(&send_time_tm)));
-        std::time_t send_time_t = std::chrono::system_clock::to_time_t(send_time);
-        std::tm* gmt = std::gmtime(&send_time_t);
-        char buffer[30];
-        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", gmt);
-        std::string send_time_str(buffer);
-        std::string req1 = "INSERT INTO notifications.users_notifications (id, theme, message, sending_time, jwt) VALUES "
-                           "(" + std::to_string(id) + ", '" + theme + "', '" + message + "', '" +
-                           send_time_str + "', '" + token + "');";
-        db.executeQuery(req1);
+        std::ostringstream oss;
+        oss << "INSERT INTO notifications.users_notifications (id, theme, message, email, sending_time, jwt) "
+            << "VALUES (" << id << ", '" << theme << "', '" << message << "', '" << email << "', '"
+            << std::put_time(&send_time_tm, "%Y-%m-%d %H:%M:%S") << "', '" << token << "');";
+
+        std::string req3 = oss.str();
+        db.executeQuery(req3);
         return true;
     }
     return false;

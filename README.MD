@@ -2,7 +2,7 @@
     <h1 align="center">NOTIFICATIONS-SERVICE</h1>
 </p>
 <p align="center">
-    <em><code>❯ REPLACE-ME</code></em>
+    <em>A service that will help you not to forget the important things.</em>
 </p>
 <p align="center">
 	<!-- Shields.io badges disabled, using skill icons. --></p>
@@ -11,7 +11,7 @@
 </p>
 <p align="center">
 	<a href="https://skillicons.dev">
-		<img src="https://skillicons.dev/icons?i=c,cpp,html,md&theme=light">
+		<img src="https://skillicons.dev/icons?i=cpp,html,js,docker,postgres&theme=light">
 	</a></p>
 
 <br>
@@ -35,34 +35,64 @@
 ---
 
 ##  Overview
-
-<code>❯ REPLACE-ME</code>
+**Notification-service** is a service that creates notifications with Yandex mail api integration.
+You can schedule notifications for the near future and receive them by mail at the specified time. Everything works in multithreaded mode and you can view all functions of the application in openapi file. 
 
 ---
 
 ##  Features
 
-<code>❯ REPLACE-ME</code>
+- **Multi-threaded Notification Scheduler**: Schedule notifications that are processed in a multi-threaded environment, ensuring high performance and concurrency.
+
+- **Email Integration**: Notifications can be sent via email, using the Yandex Mail API for seamless mail integration.
+
+- **Token-Based Authentication**: Secure token-based authentication for all API requests, ensuring proper access control.
+
+- **PostgreSQL Database Integration**: Store and manage notification data using PostgreSQL, providing reliability and performance for large datasets.
+
+- **RESTful API**: Full API documentation via OpenAPI specification, offering endpoints for creating, updating, and deleting notifications.
+
+- **Web Interface**: A user-friendly HTML interface to interact with the service and manage notifications directly from the browser.
+
+- **Docker Support**: The service is fully containerized using Docker, simplifying deployment and scaling.
+
+- **Error Handling and Logging**: Comprehensive error handling and logging mechanisms ensure service stability and troubleshooting.
+
+- **Extensibility**: The system is designed with modular components, allowing easy integration of new features and services.
 
 ---
+
 
 ##  Repository Structure
 
 ```sh
 └── NotificationsService/
     ├── CMakeLists.txt
+    ├── Dockerfile
     ├── NotificationsService
     ├── README.MD
     ├── backend
     │   ├── auxiliary_functions
+    │   │   ├── AuxiliaryFunctions.cpp
+    │   │   └── AuxiliaryFunctions.h
     │   ├── email_sender
+    │   │   ├── Email_sender.cpp
+    │   │   └── Email_sender.h
     │   ├── multithread_notification_scheduler
+    │   │   ├── Time_scheduler.cpp
+    │   │   └── Time_scheduler.h
     │   └── request_handler
+    │       ├── RequestHandler.cpp
+    │       └── RequestHandler.h
+    ├── docker-compose.yml
     ├── interface
     │   └── index.html
     ├── main.cpp
     ├── openapi.yaml
-    └── pg.sql
+    └── postgres
+        ├── PostgresProcessing.cpp
+        ├── PostgresProcessing.h
+        └── pg.sql
 ```
 
 ---
@@ -74,11 +104,22 @@
 | File | Summary |
 | --- | --- |
 | [openapi.yaml](https://github.com/naziikk/NotificationsService/blob/main/openapi.yaml) | <code>❯ REPLACE-ME</code> |
+| [docker-compose.yml](https://github.com/naziikk/NotificationsService/blob/main/docker-compose.yml) | <code>❯ REPLACE-ME</code> |
 | [NotificationsService](https://github.com/naziikk/NotificationsService/blob/main/NotificationsService) | <code>❯ REPLACE-ME</code> |
 | [main.cpp](https://github.com/naziikk/NotificationsService/blob/main/main.cpp) | <code>❯ REPLACE-ME</code> |
-| [pg.sql](https://github.com/naziikk/NotificationsService/blob/main/pg.sql) | <code>❯ REPLACE-ME</code> |
+| [Dockerfile](https://github.com/naziikk/NotificationsService/blob/main/Dockerfile) | <code>❯ REPLACE-ME</code> |
 | [CMakeLists.txt](https://github.com/naziikk/NotificationsService/blob/main/CMakeLists.txt) | <code>❯ REPLACE-ME</code> |
 | [README.MD](https://github.com/naziikk/NotificationsService/blob/main/README.MD) | <code>❯ REPLACE-ME</code> |
+
+</details>
+
+<details closed><summary>postgres</summary>
+
+| File | Summary |
+| --- | --- |
+| [pg.sql](https://github.com/naziikk/NotificationsService/blob/main/postgres/pg.sql) | <code>❯ REPLACE-ME</code> |
+| [PostgresProcessing.h](https://github.com/naziikk/NotificationsService/blob/main/postgres/PostgresProcessing.h) | <code>❯ REPLACE-ME</code> |
+| [PostgresProcessing.cpp](https://github.com/naziikk/NotificationsService/blob/main/postgres/PostgresProcessing.cpp) | <code>❯ REPLACE-ME</code> |
 
 </details>
 
@@ -173,9 +214,39 @@ Execute the test suite using the following command:
 
 ##  Project Roadmap
 
-- [X] **`Task 1`**: <strike>Implement feature one.</strike>
-- [ ] **`Task 2`**: Implement feature two.
-- [ ] **`Task 3`**: Implement feature three.
+- [X] **`Task 1`**: <strike>Implement multi-threaded notification scheduler</strike>
+    - Create a notification scheduling system that supports multiple threads.
+    - Ensure that the notifications are processed concurrently for efficiency.
+
+- [X] **`Task 2`**: <strike>Integrate Yandex Mail API for email notifications</strike>
+    - Add support for sending notifications via email using Yandex Mail API.
+    - Ensure email delivery scheduling based on the notification time.
+
+- [X] **`Task 3`**: <strike>Implement token-based authentication system</strike>
+    - Create a system for generating and validating tokens.
+    - Implement token-based access control for all API requests.
+    - Add registration, token recovery, and authorization mechanisms.
+
+- [X] **`Task 4`**: <strike>Develop web interface for managing notifications</strike>
+    - Create an HTML-based interface for interacting with the notification service.
+    - Implement a dashboard to view, create, and manage notifications.
+    - Ensure seamless integration with the RESTful API.
+  
+- [X] **`Task 5`**: <strike>Optimize PostgreSQL database queries</strike>
+    - Analyze and optimize SQL queries for performance improvements.
+    - Add indexes where necessary and ensure efficient database schema design.
+
+- [ ] **`Task 6`**: Add unit and integration tests
+    - Implement unit tests for each module (scheduler, mail sender, etc.).
+    - Add integration tests to validate the entire workflow, from creating notifications to sending emails.
+
+- [ ] **`Task 7`**: Improve error handling and logging
+    - Add comprehensive logging for debugging and monitoring purposes.
+    - Implement robust error handling across the entire service.
+  
+- [ ] **`Task 8`**: Dockerize the application for easy deployment
+    - Set up Docker for containerizing the service.
+    - Ensure all dependencies are correctly included for smooth deployment.
 
 ---
 
@@ -221,12 +292,6 @@ Contributions are welcome! Here are several ways you can contribute:
    </a>
 </p>
 </details>
-
----
-
-##  License
-
-This project is protected under the [SELECT-A-LICENSE](https://choosealicense.com/licenses) License. For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) file.
 
 ---
 
