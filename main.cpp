@@ -26,16 +26,14 @@ void HttpPostToken(const httplib::Request& request, httplib::Response &res, Data
         res.set_content(R"({"status": "bad request"})", "application/json");
         return;
     }
-    std::string req = "SELECT * FROM notifications.users WHERE name = '" + name + "' AND last_name = '" + last_name + "';";
-    pqxx::result a = db.executeQuery(req);
-    std::cout << a.query();
-    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
+    std::string req = "SELECT auth_token FROM notifications.users WHERE name = '" + name + "' AND last_name = '" + last_name + "';";
+    pqxx::result ans = db.executeQuery(req);
+    std::string token = ans[0][0].c_str();
+    if (ans.empty()) {
         res.status = 401;
         res.set_content(R"({"status": "Unauthorized"})", "application/json");
         return;
     }
-
-    std::string token = scheduler.db[{name, last_name}];
     std::string message = R"(
         <html>
             <body>
@@ -64,12 +62,14 @@ void HttpNotificationDelete(const httplib::Request& request, httplib::Response &
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
     auto [name, last_name] = aux.extractNamefromJWT(token);
-    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
+    std::string req = "SELECT auth_token FROM notifications.users WHERE name = '" + name + "' AND last_name = '" + last_name + "';";
+    pqxx::result ans = db.executeQuery(req);
+    if (ans.empty()) {
         res.status = 403;
-        res.set_content(R"({"status": "access denied"})", "application/json");
+        res.set_content(R"({"status": "Access denied"})", "application/json");
         return;
     }
-    bool flag = scheduler.deleteNotification(id_1, token);
+    bool flag = scheduler.deleteNotification(id_1, token, db);
     if (flag) {
         res.set_content(R"({"status": "deleted", "id": ")" + std::to_string(id_1) + R"("})", "application/json");
     } else {
@@ -83,9 +83,11 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
     auto [name, last_name] = aux.extractNamefromJWT(token);
-    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
+    std::string req = "SELECT auth_token FROM notifications.users WHERE name = '" + name + "' AND last_name = '" + last_name + "';";
+    pqxx::result ans = db.executeQuery(req);
+    if (ans.empty()) {
         res.status = 403;
-        res.set_content(R"({"status": "access denied"})", "application/json");
+        res.set_content(R"({"status": "Access denied"})", "application/json");
         return;
     }
     std::string theme = parsed["type"];
@@ -100,7 +102,7 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
         res.set_content(R"({"status": "bad request"})", "application/json");
         return;
     }
-    bool flag = scheduler.updateNotificationDetails(id_1, recipient, theme, message, scheduled_time_tm, token);
+    bool flag = scheduler.updateNotificationDetails(id_1, recipient, theme, message, scheduled_time_tm, token, db);
     if (flag) {
         res.set_content(R"({"status": "updated", "id": ")" + std::to_string(id_1) + R"("})", "application/json");
     } else {
@@ -113,9 +115,11 @@ void HttpNotificationPost(const httplib::Request& request, httplib::Response &re
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
     auto [name, last_name] = aux.extractNamefromJWT(token);
-    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
-        res.status = 403;
-        res.set_content(R"({"status": "access denied"})", "application/json");
+    std::string req = "SELECT auth_token FROM notifications.users WHERE name = '" + name + "' AND last_name = '" + last_name + "';";
+    pqxx::result ans = db.executeQuery(req);
+    if (ans.empty()) {
+        res.status = 401;
+        res.set_content(R"({"status": "Unauthorized"})", "application/json");
         return;
     }
     std::string theme = parsed["type"];
@@ -132,7 +136,7 @@ void HttpNotificationPost(const httplib::Request& request, httplib::Response &re
         return;
     }
 
-    scheduler.scheduleNotification(id, recipient, theme, message, scheduled_time_tm, token);
+    scheduler.scheduleNotification(id, recipient, theme, message, scheduled_time_tm, token, db);
     id++;
 
     json response = {
@@ -141,16 +145,16 @@ void HttpNotificationPost(const httplib::Request& request, httplib::Response &re
             {"scheduled_time", scheduled_time_str}
     };
     res.set_content(response.dump(), "application/json");
-
-    return;
 }
 
 void HttpRegisterPost(const httplib::Request& request, httplib::Response &res, Database& db) {
     auto parsed = json::parse(request.body);
     std::string name = parsed["name"];
     std::string last_name = parsed["last_name"];
-    if (scheduler.db.find({name, last_name}) != scheduler.db.end()) {
-        std::string token = scheduler.db[{name, last_name}];
+    std::string req = "SELECT auth_token FROM notifications.users WHERE name = '" + name + "' AND last_name = '" + last_name + "';";
+    pqxx::result ans = db.executeQuery(req);
+    if (!ans.empty()) {
+        std::string token = ans[0][0].c_str();
         json response = {
                 {"message", "You already have a token!"},
                 {"auth_token", token}
@@ -158,10 +162,19 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res, D
         res.set_content(response.dump(), "application/json");
         return;
     }
+//    if (scheduler.db.find({name, last_name}) != scheduler.db.end()) {
+//        std::string token = scheduler.db[{name, last_name}];
+//        json response = {
+//                {"message", "You already have a token!"},
+//                {"auth_token", token}
+//        };
+//        res.set_content(response.dump(), "application/json");
+//        return;
+//    }
     std::string token = aux.createJWT(name, last_name);
-    scheduler.db[{name, last_name}] = token;
-    std::cout << scheduler.db[{name, last_name}] << ' ';
-    scheduler.users[token] = std::vector<Time_scheduler::Notification>();
+    std::string insert = "INSERT INTO notifications.users (name, last_name, auth_token) VALUES "
+                              "('" + name + "', '" + last_name + "', '" + token + "');";
+    db.executeQuery(insert);
     json response = {
             {"auth_token", token}
     };
@@ -171,9 +184,12 @@ void HttpRegisterPost(const httplib::Request& request, httplib::Response &res, D
 void HttpNotificationsGet(const httplib::Request &request, httplib::Response &res, Database& db) {
     std::string token = request.matches[1];
     auto [name, last_name] = aux.extractNamefromJWT(token);
-    if (scheduler.db.find({name, last_name}) == scheduler.db.end()) {
-        res.status = 403;
-        res.set_content(R"({"status": "access denied"})", "application/json");
+
+    std::string req = "SELECT auth_token FROM notifications.users WHERE name = '" + name + "' AND last_name = '" + last_name + "';";
+    pqxx::result ans = db.executeQuery(req);
+    if (ans.empty()) {
+        res.status = 401;
+        res.set_content(R"({"status": "Unauthorized"})", "application/json");
         return;
     }
     std::vector<Time_scheduler::Notification> arr = scheduler.getNotifications(token);
@@ -204,21 +220,11 @@ int main() {
     try {
         std::string connect = "dbname=notifications host=localhost port=5432";
         Database db(connect);
+        scheduler.db = &db;
         db.initDbFromFile("/Users/nazarzakrevskij/CLionProjects/NotificationsService/postgres/pg.sql");
-        std::string insert_user = "INSERT INTO notifications.users (name, last_name, auth_token) VALUES "
-                                  "('John', 'Doe', 'token123'),"
-                                  "('Jane', 'Smith', 'token456'),"
-                                  "('Alice', 'Johnson', 'token789');";
-        db.executeQuery(insert_user);
-
         pqxx::connection C(connect);
         pqxx::work W(C);
         pqxx::result R = W.exec("SELECT * FROM notifications.users;");
-//        for (const auto &row : R) {
-//            std::cout << "Name: " << row["name"].c_str() << ", "
-//                      << "Last Name: " << row["last_name"].c_str() << ", "
-//                      << "Auth Token: " << row["auth_token"].c_str() << '\n';
-//        }
         W.commit();
         std::thread worker(&Time_scheduler::workerThread, &scheduler);
         httplib::Server server;

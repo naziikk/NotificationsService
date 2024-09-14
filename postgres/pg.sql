@@ -9,10 +9,12 @@ CREATE TABLE IF NOT EXISTS notifications.users(
 );
 
 CREATE TABLE IF NOT EXISTS notifications.users_notifications(
-    id integer primary key,
+    id integer,
+    theme text,
     message text,
     email text,
     sending_time TIMESTAMP WITH TIME ZONE,
-    jwt varchar(16),
-    foreign key(jwt) references users(auth_token)
+    jwt varchar(255),
+    FOREIGN KEY (jwt) REFERENCES notifications.users(auth_token)
 );
+
