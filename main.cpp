@@ -111,7 +111,7 @@ void HttpNotificationPutById(const httplib::Request& request, httplib::Response 
     }
 }
 
-void HttpNotificationPost(const httplib::Request& request, httplib::Response &res, int id, Database& db) {
+void HttpNotificationPost(const httplib::Request& request, httplib::Response &res, int& id, Database& db) {
     auto parsed = json::parse(request.body);
     std::string token = parsed["auth_token"];
     auto [name, last_name] = aux.extractNamefromJWT(token);
@@ -183,7 +183,7 @@ void HttpNotificationsGet(const httplib::Request &request, httplib::Response &re
         res.set_content(R"({"status": "Unauthorized"})", "application/json");
         return;
     }
-    std::vector<Time_scheduler::Notification> arr = scheduler.getNotifications(token);
+    std::vector<Time_scheduler::Notification> arr = scheduler.getNotifications(token, db);
     nlohmann::json jsonResponse;
     for (const auto& el : arr) {
         jsonResponse.push_back({

@@ -50,15 +50,15 @@ void Time_scheduler::workerThread() {
                 continue;
             } else {
                 int notification_id = res[0][0].as<int>();
-                std::string theme = res[0][1].as<std::string>();
-                std::string message = res[0][2].as<std::string>();
-                std::string email = res[0][3].as<std::string>();
-                std::string sending_time_str = res[0][4].as<std::string>();
+                auto theme = res[0][1].as<std::string>();
+                auto message = res[0][2].as<std::string>();
+                auto email = res[0][3].as<std::string>();
+                auto sending_time_str = res[0][4].as<std::string>();
                 std::tm sending_time_tm = {};
                 std::istringstream ss(sending_time_str);
                 ss >> std::get_time(&sending_time_tm, "%Y-%m-%d %H:%M:%S"); // Парсинг строки времени
                 auto sending_time = std::chrono::system_clock::from_time_t(std::mktime(&sending_time_tm));
-                std::string jwt_in_db = res[0][5].as<std::string>();
+                auto jwt_in_db = res[0][5].as<std::string>();
                 auto now = std::chrono::system_clock::now();
                 if (sending_time > now) {
                     {
@@ -149,8 +149,26 @@ bool Time_scheduler::deleteNotification(int id, const std::string& token, Databa
     return false;
 }
 
-std::vector<Time_scheduler::Notification> Time_scheduler::getNotifications(std::string token) {
+std::vector<Time_scheduler::Notification> Time_scheduler::getNotifications(std::string token, Database& db) {
     std::lock_guard<std::mutex> lock(m);
-    return users[token];
+    std::string req = "SELECT id, theme, message, email, sending_time, jwt FROM notifications.users_notifications "
+                      "WHERE jwt = '" + token + "';";
+    pqxx::result res = db.executeQuery(req);
+    std::vector<Notification> notifications;
+    for (const auto& row : res) {
+        int id = row[0].as<int>();
+        auto theme = row[1].as<std::string>();
+        auto message = row[2].as<std::string>();
+        auto email = row[3].as<std::string>();
+        auto sending_time_str = row[4].as<std::string>();
+        std::tm sending_time_tm = {};
+        std::istringstream ss(sending_time_str);
+        ss >> std::get_time(&sending_time_tm, "%Y-%m-%d %H:%M:%S");
+        auto sending_time = std::chrono::system_clock::from_time_t(std::mktime(&sending_time_tm));
+        auto jwt = row[5].as<std::string>();
+        Notification notification{id, theme, message, email, sending_time, jwt};
+        notifications.push_back(notification);
+    }
+    return notifications;
 }
 

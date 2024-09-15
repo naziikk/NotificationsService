@@ -21,3 +21,5 @@ CREATE TABLE IF NOT EXISTS notifications.users_notifications (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_notifications ON notifications.users_notifications (id, jwt);
 
 CREATE INDEX IF NOT EXISTS name_last_name ON notifications.users(name, last_name);
+
+CREATE INDEX IF NOT EXISTS jwt_token ON notifications.users_notifications using hash(jwt);

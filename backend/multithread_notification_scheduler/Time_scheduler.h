@@ -39,7 +39,7 @@ public:
 
     bool deleteNotification(int id, const std::string& token, Database& db);
 
-    std::vector<Time_scheduler::Notification> getNotifications(std::string token);
+    std::vector<Time_scheduler::Notification> getNotifications(std::string token, Database& db);
     Database* db;
     std::unordered_map<std::string, std::vector<Time_scheduler::Notification>> users;
 };

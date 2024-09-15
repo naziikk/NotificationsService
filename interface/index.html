@@ -322,6 +322,21 @@
     <div class="result-container">
         <div id="result" style="display: none;"></div>
     </div>
+    <div id="notificationsTableContainer" style="display: none;">
+        <h2>Your Notifications</h2>
+        <table id="notificationsTable" border="1" cellspacing="0" cellpadding="10" style="width:100%; margin-top: 5px;">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Recipient</th>
+                <th>Theme</th>
+                <th>Message</th>
+                <th>Sending Time</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -410,11 +425,9 @@
                 email: document.getElementById('emailRecover').value
             };
         } else if (action === 'view') {
-            url = 'http://localhost:8080/notifications';
+            url = `http://localhost:8080/notifications/${document.getElementById('viewToken').value}`;
             method = 'GET';
-            url += `/${document.getElementById('viewToken').value}`;
         }
-
         try {
             const response = await fetch(url, {
                 method: method,
@@ -425,37 +438,59 @@
             });
 
             const resultDiv = document.getElementById('result');
-            const resultText = await response.json();
+            const resultText = await response.json().catch(() => ({ message: "Non-JSON response received" }));
             resultDiv.style.display = 'block';
 
             if (response.ok) {
-                if (action === 'register') {
+                if (action === 'view') {
+                    const notifications = resultText;
+                    const tableContainer = document.getElementById('notificationsTableContainer');
+                    const tableBody = document.querySelector('#notificationsTable tbody');
+                    tableBody.innerHTML = '';
+
+                    notifications.forEach(notification => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>${notification.id}</td>
+                        <td>${notification.email}</td>
+                        <td>${notification.theme}</td>
+                        <td>${notification.message}</td>
+                        <td>${new Date(notification.sending_time * 1000).toLocaleString()}</td>
+                    `;
+                        tableBody.appendChild(row);
+                    });
+                    tableContainer.style.display = 'block';
+                    setTimeout(() => {
+                        tableContainer.style.display = 'none';
+                    }, 10000);
+                } else if (action === 'register') {
                     const authToken = resultText.auth_token;
                     resultDiv.innerHTML = `
-                <div class="result-container">
-                    <h3>Registration Successful!</h3>
-                    <p>Your JWT token:</p>
-                    <div class="token-display">
-                        <input type="text" id="generatedToken" class="token-input" value="${authToken}" readonly>
-                        <button class="copy-button" onclick="copyToClipboard('generatedToken')">Copy</button>
+                    <div class="result-container">
+                        <h3>Registration Successful!</h3>
+                        <p>Your JWT token:</p>
+                        <div class="token-display">
+                            <input type="text" id="generatedToken" class="token-input" value="${authToken}" readonly>
+                            <button class="copy-button" onclick="copyToClipboard('generatedToken')">Copy</button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
                 } else {
                     resultDiv.innerHTML = formatResult(resultText);
                 }
                 resultDiv.className = 'success';
             } else {
                 resultDiv.innerHTML = `
-            <div class="result-container error">
-                <strong>Error:</strong> ${resultText.message || "An error occurred"}
-            </div>
-        `;
+                <div class="result-container error">
+                    <strong>Error:</strong> ${resultText.message || "An error occurred"}
+                </div>
+            `;
                 resultDiv.className = 'error';
             }
             setTimeout(() => {
                 resultDiv.style.display = 'none';
             }, 5000);
+
         } catch (error) {
             console.error('Error:', error);
             const resultDiv = document.getElementById('result');
